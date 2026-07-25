@@ -20,11 +20,35 @@ interface MeetingDao {
     @Update
     suspend fun updateMeeting(meeting: MeetingEntity)
 
-    @Delete
-    suspend fun deleteMeeting(meeting: MeetingEntity)
-
     @Query("DELETE FROM meetings WHERE id = :id")
     suspend fun deleteMeetingById(id: Long)
+
+    @Query("DELETE FROM participants WHERE meetingId = :meetingId")
+    suspend fun deleteParticipantsForMeeting(meetingId: Long)
+
+    @Query("DELETE FROM transcript_segments WHERE meetingId = :meetingId")
+    suspend fun deleteTranscriptSegmentsForMeeting(meetingId: Long)
+
+    @Query("DELETE FROM action_tasks WHERE meetingId = :meetingId")
+    suspend fun deleteTasksForMeeting(meetingId: Long)
+
+    @Query("DELETE FROM agreements WHERE meetingId = :meetingId")
+    suspend fun deleteAgreementsForMeeting(meetingId: Long)
+
+    @Query("DELETE FROM chat_messages WHERE meetingId = :meetingId")
+    suspend fun deleteChatMessagesForMeeting(meetingId: Long)
+
+    // ponytail: no FK/cascade on these tables (schema is still v1, unreleased) — explicit
+    // per-table deletes avoid a migration. Add ON DELETE CASCADE once a real migration path exists.
+    @Transaction
+    suspend fun deleteMeetingCascade(meetingId: Long) {
+        deleteParticipantsForMeeting(meetingId)
+        deleteTranscriptSegmentsForMeeting(meetingId)
+        deleteTasksForMeeting(meetingId)
+        deleteAgreementsForMeeting(meetingId)
+        deleteChatMessagesForMeeting(meetingId)
+        deleteMeetingById(meetingId)
+    }
 
     // Participants
     @Query("SELECT * FROM participants WHERE meetingId = :meetingId")

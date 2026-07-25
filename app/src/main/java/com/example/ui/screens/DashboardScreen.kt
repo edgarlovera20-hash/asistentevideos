@@ -121,15 +121,6 @@ fun DashboardScreen(
                 )
             }
 
-            // Hero Callout
-            item {
-                HeaderBanner(
-                    title = "Memoria Corporativa Activa",
-                    subtitle = "Todas tus reuniones transcritas, resumidas e indexadas en tiempo real con Gemini 2.5 Pro.",
-                    roleTag = "${currentUser.provider.label} • AES-256"
-                )
-            }
-
             // Feedback Toast Banner if action performed
             if (!actionFeedback.isNullOrBlank()) {
                 item {

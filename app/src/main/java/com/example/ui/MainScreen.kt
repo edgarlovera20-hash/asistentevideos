@@ -29,6 +29,15 @@ fun MainScreen(
 ) {
     var selectedTab by remember { mutableStateOf(0) }
     val meetings by viewModel.meetings.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.dismissError()
+        }
+    }
 
     // Deep Link auto join trigger
     LaunchedEffect(initialDeepLinkUrl) {
@@ -48,6 +57,7 @@ fun MainScreen(
 
     Scaffold(
         contentWindowInsets = WindowInsets.safeDrawing,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {

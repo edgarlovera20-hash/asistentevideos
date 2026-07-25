@@ -56,7 +56,7 @@ class MeetingRepository(
     }
 
     suspend fun deleteMeeting(meetingId: Long) = withContext(Dispatchers.IO) {
-        dao.deleteMeetingById(meetingId)
+        dao.deleteMeetingCascade(meetingId)
     }
 
     suspend fun addTranscriptSegment(

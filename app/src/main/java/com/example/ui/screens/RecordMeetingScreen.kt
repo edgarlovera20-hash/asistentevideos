@@ -19,14 +19,17 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.Manifest
 import com.example.data.db.TranscriptSegmentEntity
 import com.example.ui.MeetingViewModel
 import com.example.ui.components.AudioWaveformVisualizer
 import com.example.ui.components.JoinUrlDialog
 import com.example.ui.components.QrScannerModal
 import com.example.ui.theme.*
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberPermissionState
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun RecordMeetingScreen(
     viewModel: MeetingViewModel,
@@ -39,6 +42,7 @@ fun RecordMeetingScreen(
     val activeSpeaker by viewModel.activeSpeaker.collectAsState()
     val transcript by viewModel.activeTranscript.collectAsState()
     val isAnalyzing by viewModel.isAnalyzingAI.collectAsState()
+    val micPermission = rememberPermissionState(Manifest.permission.RECORD_AUDIO)
 
     var showQrScannerModal by remember { mutableStateOf(false) }
     var showJoinUrlDialog by remember { mutableStateOf(false) }
@@ -73,6 +77,34 @@ fun RecordMeetingScreen(
         )
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        if (!micPermission.status.isGranted && !isRecording && !isAnalyzing) {
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = AmberWarning.copy(alpha = 0.15f),
+                border = androidx.compose.foundation.BorderStroke(1.dp, AmberWarning.copy(alpha = 0.4f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp).fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = if (micPermission.status.shouldShowRationale)
+                            "Se necesita acceso al micrófono para transcribir la reunión en vivo."
+                        else "Otorga acceso al micrófono para grabar y transcribir en tiempo real.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = AmberWarning,
+                        modifier = Modifier.weight(1f)
+                    )
+                    TextButton(onClick = { micPermission.launchPermissionRequest() }) {
+                        Text("Permitir", color = AmberWarning, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+        }
 
         if (!isRecording && !isAnalyzing) {
             // Setup Form before starting
@@ -130,7 +162,10 @@ fun RecordMeetingScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         OutlinedButton(
-                            onClick = { showQrScannerModal = true },
+                            onClick = {
+                                if (micPermission.status.isGranted) showQrScannerModal = true
+                                else micPermission.launchPermissionRequest()
+                            },
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp),
                             border = androidx.compose.foundation.BorderStroke(1.dp, CyanPrimary)
@@ -141,7 +176,10 @@ fun RecordMeetingScreen(
                         }
 
                         OutlinedButton(
-                            onClick = { showJoinUrlDialog = true },
+                            onClick = {
+                                if (micPermission.status.isGranted) showJoinUrlDialog = true
+                                else micPermission.launchPermissionRequest()
+                            },
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp),
                             border = androidx.compose.foundation.BorderStroke(1.dp, IndigoSecondary)
@@ -161,8 +199,12 @@ fun RecordMeetingScreen(
                     ) {
                         Surface(
                             onClick = {
-                                val parts = participantsText.split(",").map { it.trim() }
-                                viewModel.startRecording(meetingTitle, locationName, categoryName, parts)
+                                if (micPermission.status.isGranted) {
+                                    val parts = participantsText.split(",").map { it.trim() }
+                                    viewModel.startRecording(meetingTitle, locationName, categoryName, parts)
+                                } else {
+                                    micPermission.launchPermissionRequest()
+                                }
                             },
                             shape = CircleShape,
                             color = CyanPrimary,
