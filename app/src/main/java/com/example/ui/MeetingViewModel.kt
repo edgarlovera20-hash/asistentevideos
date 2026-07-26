@@ -7,7 +7,6 @@ import com.example.data.audio.AudioRecordingForegroundService
 import com.example.data.audio.RealtimeAudioRecorder
 import com.example.data.db.*
 import com.example.data.repository.MeetingRepository
-import com.example.data.user.UserSessionManager
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
@@ -23,6 +22,9 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val allTasks: StateFlow<List<ActionTaskEntity>> = repository.allTasks
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val auditLogs: StateFlow<List<AuditLogEntity>> = repository.auditLogs
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _searchQuery = MutableStateFlow("")
@@ -118,6 +120,10 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
         _errorMessage.value = null
     }
 
+    private fun logAudit(message: String) {
+        viewModelScope.launch { repository.addAuditLog(message) }
+    }
+
     init {
         viewModelScope.launch {
             repository.seedInitialDataIfEmpty()
@@ -148,7 +154,7 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
                 participants = info.defaultParticipants
             )
             _actionFeedback.value = "Conectado a ${info.platformName}. Grabando audio del micrófono."
-            UserSessionManager.addAuditLog("Conexión externa activada por Deep Link / QR: ${info.platformName} - URL: $cleanUrl")
+            repository.addAuditLog("Conexión externa activada por Deep Link / QR: ${info.platformName} - URL: $cleanUrl")
             beginRecording(id, titleToUse, info.defaultParticipants.firstOrNull() ?: "Micrófono")
         }
     }
@@ -220,7 +226,7 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
     }
 
     /** Starts real MediaRecorder capture + foreground service. Transcription happens once, from the real file, on stop. */
-    private fun beginRecording(meetingId: Long, title: String, speakerLabel: String) {
+    private suspend fun beginRecording(meetingId: Long, title: String, speakerLabel: String) {
         val started = audioRecorder.startRecording()
         if (!started) {
             _errorMessage.value = "No se pudo iniciar la grabación: falta permiso de micrófono o el hardware no está disponible."
@@ -235,7 +241,7 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
         _activeSpeaker.value = "Persona 1 ($speakerLabel)"
 
         AudioRecordingForegroundService.startService(getApplication(), title)
-        UserSessionManager.addAuditLog("Nueva grabación iniciada: \"$title\"")
+        repository.addAuditLog("Nueva grabación iniciada: \"$title\"")
 
         recordingTimerJob?.cancel()
         recordingTimerJob = viewModelScope.launch {
@@ -253,7 +259,7 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
     fun pauseRecording() {
         if (audioRecorder.pauseRecording()) {
             _isPaused.value = true
-            UserSessionManager.addAuditLog("Grabación pausada temporalmente.")
+            logAudit("Grabación pausada temporalmente.")
         } else {
             _errorMessage.value = "No se pudo pausar la grabación."
         }
@@ -262,7 +268,7 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
     fun resumeRecording() {
         if (audioRecorder.resumeRecording()) {
             _isPaused.value = false
-            UserSessionManager.addAuditLog("Grabación reanudada.")
+            logAudit("Grabación reanudada.")
         } else {
             _errorMessage.value = "No se pudo reanudar la grabación."
         }
@@ -286,7 +292,7 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
             _isAnalyzingAI.value = true
             try {
                 if (recordedFile != null && recordedFile.exists() && recordedFile.length() > 0L) {
-                    UserSessionManager.addAuditLog("Transcribiendo audio grabado con Gemini...")
+                    repository.addAuditLog("Transcribiendo audio grabado con Gemini...")
                     val participantsList = activeParticipants.value.map { it.name }
                     repository.processRecordedAudioFile(
                         meetingId = meetingId,
@@ -298,9 +304,9 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
                     _errorMessage.value = "La grabación no produjo audio; no hay transcripción para analizar."
                 }
 
-                UserSessionManager.addAuditLog("Enviando transcripción a Gemini para análisis multivariable...")
+                repository.addAuditLog("Enviando transcripción a Gemini para análisis multivariable...")
                 repository.analyzeMeetingWithAI(meetingId)
-                UserSessionManager.addAuditLog("Análisis inteligente completado. Resumen, tareas y minutas generadas.")
+                repository.addAuditLog("Análisis inteligente completado. Resumen, tareas y minutas generadas.")
             } catch (e: Exception) {
                 _errorMessage.value = "No se pudo completar el análisis: ${e.message ?: "error desconocido"}"
             } finally {
@@ -320,7 +326,7 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
         if (messageText.isBlank()) return
 
         viewModelScope.launch {
-            UserSessionManager.addAuditLog("Pregunta enviada a Gemini Chat sobre la reunión #$meetingId")
+            repository.addAuditLog("Pregunta enviada a Gemini Chat sobre la reunión #$meetingId")
             try {
                 repository.sendChatMessage(meetingId, messageText)
             } catch (e: Exception) {
@@ -332,7 +338,7 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
     fun toggleTaskCompletion(task: ActionTaskEntity) {
         viewModelScope.launch {
             repository.toggleTaskCompletion(task)
-            UserSessionManager.addAuditLog("Tarea \"${task.title}\" actualizada.")
+            repository.addAuditLog("Tarea \"${task.title}\" actualizada.")
         }
     }
 
@@ -342,7 +348,7 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
             _isAnalyzingAI.value = true
             try {
                 _generatedDocument.value = repository.generateDocumentFormat(meetingId, formatType)
-                UserSessionManager.addAuditLog("Documento $formatType generado por Gemini.")
+                repository.addAuditLog("Documento $formatType generado por Gemini.")
             } catch (e: Exception) {
                 _errorMessage.value = "No se pudo generar el documento: ${e.message ?: "error desconocido"}"
             } finally {
@@ -357,7 +363,7 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
             _isAnalyzingAI.value = true
             try {
                 repository.translateMeeting(meetingId, language)
-                UserSessionManager.addAuditLog("Reunión traducida al idioma: $language")
+                repository.addAuditLog("Reunión traducida al idioma: $language")
             } catch (e: Exception) {
                 _errorMessage.value = "No se pudo traducir la reunión: ${e.message ?: "error desconocido"}"
             } finally {
@@ -371,7 +377,7 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
             _actionFeedback.value = "Ejecutando acción: $actionName..."
             delay(1200)
             _actionFeedback.value = "¡Acción \"$actionName\" completada exitosamente por IA de Acciones!"
-            UserSessionManager.addAuditLog("Acción ejecutada: $actionName")
+            repository.addAuditLog("Acción ejecutada: $actionName")
             delay(2500)
             _actionFeedback.value = null
         }
@@ -383,7 +389,7 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
             try {
                 repository.deleteMeeting(meetingId)
                 _currentMeetingId.value = null
-                UserSessionManager.addAuditLog("Reunión #$meetingId eliminada con borrado seguro.")
+                repository.addAuditLog("Reunión #$meetingId eliminada con borrado seguro.")
             } catch (e: Exception) {
                 _errorMessage.value = "No se pudo eliminar la reunión: ${e.message ?: "error desconocido"}"
             }
@@ -405,7 +411,7 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
                     modelUsed = model
                 )
                 _actionFeedback.value = "¡$skillName generado!"
-                UserSessionManager.addAuditLog("Visual Skill ejecutado: $skillName")
+                repository.addAuditLog("Visual Skill ejecutado: $skillName")
             } catch (e: Exception) {
                 _errorMessage.value = "No se pudo generar $skillName: ${e.message ?: "error desconocido"}"
             }

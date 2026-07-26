@@ -2,6 +2,7 @@ package com.example.data.api
 
 import com.example.BuildConfig
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -53,6 +54,28 @@ interface GeminiApi {
     ): GeminiResponse
 }
 
+// ponytail: a plain manual loop, not a library — 3 call sites don't justify a retry framework.
+suspend fun <T> retryIO(times: Int = 2, initialDelayMs: Long = 500, block: suspend () -> T): T {
+    var delayMs = initialDelayMs
+    repeat(times) {
+        try {
+            return block()
+        } catch (e: Exception) {
+            delay(delayMs)
+            delayMs *= 3
+        }
+    }
+    return block() // last attempt: let it throw so the caller's catch handles the fallback
+}
+
+const val MAX_TRANSCRIPT_CHARS = 30_000
+
+fun truncateForPrompt(text: String): String {
+    if (text.length <= MAX_TRANSCRIPT_CHARS) return text
+    return "[transcripción recortada, se usaron los últimos $MAX_TRANSCRIPT_CHARS caracteres]\n" +
+        text.takeLast(MAX_TRANSCRIPT_CHARS)
+}
+
 object RetrofitClient {
     private const val BASE_URL = "https://generativelanguage.googleapis.com/"
 
@@ -92,10 +115,10 @@ class GeminiMeetingService {
         val prompt = """
             Eres Heavenly AI, la inteligencia artificial empresarial más avanzada para análisis de reuniones.
             Analiza la siguiente reunión llamada "$meetingTitle" realizada por los participantes: $participants.
-            
+
             TRANSCRIPCIÓN COMPLETA:
-            $transcript
-            
+            ${truncateForPrompt(transcript)}
+
             Debes generar un análisis estructurado completo con las siguientes secciones exactas marcadas con encabezados:
             ---RESUMEN EJECUTIVO---
             (Resumen conciso y profesional de los puntos clave tratados)
@@ -120,13 +143,15 @@ class GeminiMeetingService {
         """.trimIndent()
 
         try {
-            val response = RetrofitClient.api.generateContent(
-                apiKey = apiKey,
-                request = GeminiRequest(
-                    contents = listOf(GeminiContent(parts = listOf(GeminiPart(text = prompt)))),
-                    generationConfig = GeminiGenerationConfig(temperature = 0.2f)
+            val response = retryIO {
+                RetrofitClient.api.generateContent(
+                    apiKey = apiKey,
+                    request = GeminiRequest(
+                        contents = listOf(GeminiContent(parts = listOf(GeminiPart(text = prompt)))),
+                        generationConfig = GeminiGenerationConfig(temperature = 0.2f)
+                    )
                 )
-            )
+            }
             val text = response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text
             if (text.isNullOrBlank()) {
                 generateFallbackAnalysis(transcript, meetingTitle)
@@ -153,8 +178,8 @@ class GeminiMeetingService {
             Eres Heavenly AI Assistant, un asistente corporativo experto en las reuniones de la empresa.
             
             CONTEXTO DE LA REUNIÓN / MEMORIA CORPORATIVA:
-            $meetingContext
-            
+            ${truncateForPrompt(meetingContext)}
+
             HISTORIAL DE CHAT PREVIO:
             $historyText
             
@@ -165,12 +190,14 @@ class GeminiMeetingService {
         """.trimIndent()
 
         try {
-            val response = RetrofitClient.api.generateContent(
-                apiKey = apiKey,
-                request = GeminiRequest(
-                    contents = listOf(GeminiContent(parts = listOf(GeminiPart(text = prompt))))
+            val response = retryIO {
+                RetrofitClient.api.generateContent(
+                    apiKey = apiKey,
+                    request = GeminiRequest(
+                        contents = listOf(GeminiContent(parts = listOf(GeminiPart(text = prompt))))
+                    )
                 )
-            )
+            }
             response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text
                 ?: "No se obtuvo respuesta de la IA. Por favor intenta nuevamente."
         } catch (e: Exception) {
@@ -194,15 +221,17 @@ class GeminiMeetingService {
             "EXCEL" -> "Genera el contenido estructurado como tabla de Excel (.xlsx) con columnas: ID | Módulo | Tarea / Pendiente | Responsable | Fecha Límite | Prioridad | Estado | Comentarios."
             "POWERPOINT" -> "Genera la estructura de presentación PowerPoint de 5 diapositivas (.pptx). Diapositiva 1: Título y Objetivos. Diapositiva 2: Resumen de Discusión. Diapositiva 3: Decisiones Clave. Diapositiva 4: Hoja de Ruta y Tareas. Diapositiva 5: Conclusiones y Próximos Pasos."
             else -> "Genera el reporte ejecutivo completo en formato PDF institucional con sello de agua Heavenly AI, introducción, métricas clave, matriz de riesgos y plan de acción."
-        } + "\n\nReunión: $meetingTitle\nTranscripción: $transcript\nAnálisis previo: $analysis"
+        } + "\n\nReunión: $meetingTitle\nTranscripción: ${truncateForPrompt(transcript)}\nAnálisis previo: $analysis"
 
         try {
-            val response = RetrofitClient.api.generateContent(
-                apiKey = apiKey,
-                request = GeminiRequest(
-                    contents = listOf(GeminiContent(parts = listOf(GeminiPart(text = prompt))))
+            val response = retryIO {
+                RetrofitClient.api.generateContent(
+                    apiKey = apiKey,
+                    request = GeminiRequest(
+                        contents = listOf(GeminiContent(parts = listOf(GeminiPart(text = prompt))))
+                    )
                 )
-            )
+            }
             response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text
                 ?: generateFallbackDocumentFormat(meetingTitle, formatType)
         } catch (e: Exception) {
@@ -221,12 +250,14 @@ class GeminiMeetingService {
         val prompt = "Traduce fielmente el siguiente texto de reunión al idioma: $targetLanguage. Mantén los nombres propios y formato original.\n\n$text"
 
         try {
-            val response = RetrofitClient.api.generateContent(
-                apiKey = apiKey,
-                request = GeminiRequest(
-                    contents = listOf(GeminiContent(parts = listOf(GeminiPart(text = prompt))))
+            val response = retryIO {
+                RetrofitClient.api.generateContent(
+                    apiKey = apiKey,
+                    request = GeminiRequest(
+                        contents = listOf(GeminiContent(parts = listOf(GeminiPart(text = prompt))))
+                    )
                 )
-            )
+            }
             response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text ?: text
         } catch (e: Exception) {
             text
@@ -378,7 +409,7 @@ class GeminiMeetingService {
                 ----------------------------------------------------
                 HEAVENLY AI ENTERPRISE - REPORTE EJECUTIVO PDF
                 ----------------------------------------------------
-                Documento verificado digitalmente mediante cifrado AES-256.
+                Documento generado y con control de acceso interno.
                 
                 MÉTRICAS CLAVE:
                 - Duración: 45 minutos
@@ -421,7 +452,7 @@ class GeminiMeetingService {
                 assetType = "MIND_MAP",
                 category = "Reuniones",
                 description = "Desglose conceptual de acuerdos, roles de participantes y dependencias operativas.",
-                visualDataJson = """{"root":"$meetingTitle","children":[{"title":"Estrategia Comercial","nodes":["Contrato Telmex","Incremento +24%","Cierre Mensual"]},{"title":"Arquitectura & IT","nodes":["Gemini Flash API","Cifrado AES-256","Memoria Vectorial"]},{"title":"RRHH & Selección","nodes":["Génesis Rivas","Módulo Reclutamiento","Expedientes"]}]}""",
+                visualDataJson = """{"root":"$meetingTitle","children":[{"title":"Estrategia Comercial","nodes":["Contrato Telmex","Incremento +24%","Cierre Mensual"]},{"title":"Arquitectura & IT","nodes":["Gemini Flash API","Control de Acceso","Memoria Vectorial"]},{"title":"RRHH & Selección","nodes":["Génesis Rivas","Módulo Reclutamiento","Expedientes"]}]}""",
                 exportFormats = "SVG, HTML, MindNode, Whimsical",
                 mcpSource = "Plantilla local",
                 modelUsed = "Plantilla",
@@ -469,7 +500,7 @@ class GeminiMeetingService {
                 assetType = "ROADMAP",
                 category = "Negocio",
                 description = "Diagrama de secuencia de procesos de negocio y hoja de ruta de implementación a 30 días.",
-                visualDataJson = """{"phases":[{"name":"Semana 1","tasks":["Firma de Contrato Telmex","Auditoría de Cifrado AES-256"]},{"name":"Semana 2","tasks":["Despliegue Visual Intelligence Engine","Pruebas Figma/Canva MCP"]},{"name":"Semana 3","tasks":["Capacitación de RRHH","Entrega a Dirección"]}]}""",
+                visualDataJson = """{"phases":[{"name":"Semana 1","tasks":["Firma de Contrato Telmex","Auditoría de Control de Acceso"]},{"name":"Semana 2","tasks":["Despliegue Visual Intelligence Engine","Pruebas Figma/Canva MCP"]},{"name":"Semana 3","tasks":["Capacitación de RRHH","Entrega a Dirección"]}]}""",
                 exportFormats = "SVG, Lucidchart, Miro, PDF",
                 mcpSource = "Plantilla local",
                 modelUsed = "Plantilla",

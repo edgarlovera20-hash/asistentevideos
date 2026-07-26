@@ -18,6 +18,11 @@ class MeetingRepository(
     val allMeetings: Flow<List<MeetingEntity>> = dao.getAllMeetings()
     val allTasks: Flow<List<ActionTaskEntity>> = dao.getAllTasks()
     val allVisualAssets: Flow<List<VisualAssetEntity>> = dao.getAllVisualAssets()
+    val auditLogs: Flow<List<AuditLogEntity>> = dao.getAuditLogs()
+
+    suspend fun addAuditLog(message: String) = withContext(Dispatchers.IO) {
+        dao.insertAuditLog(AuditLogEntity(message = message))
+    }
 
     fun getMeetingById(id: Long): Flow<MeetingEntity?> = dao.getMeetingById(id)
     fun getMeetingWithDetails(id: Long): Flow<MeetingWithDetails?> = dao.getMeetingWithDetails(id)

@@ -145,6 +145,13 @@ interface MeetingDao {
     @Query("DELETE FROM visual_assets WHERE id = :id")
     suspend fun deleteVisualAsset(id: Long)
 
+    // Audit Log
+    @Query("SELECT * FROM audit_logs ORDER BY timestampMs DESC LIMIT 200")
+    fun getAuditLogs(): Flow<List<AuditLogEntity>>
+
+    @Insert
+    suspend fun insertAuditLog(log: AuditLogEntity)
+
     // Search Across Enterprise Memory
     @Query("""
         SELECT DISTINCT m.* FROM meetings m
