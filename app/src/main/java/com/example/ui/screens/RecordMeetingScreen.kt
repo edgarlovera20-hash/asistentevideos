@@ -48,10 +48,10 @@ fun RecordMeetingScreen(
     var showQrScannerModal by remember { mutableStateOf(false) }
     var showJoinUrlDialog by remember { mutableStateOf(false) }
 
-    var meetingTitle by remember { mutableStateOf("Reunión Estratégica & Ventas") }
-    var locationName by remember { mutableStateOf("Sala Ejecutiva A / Google Meet") }
-    var categoryName by remember { mutableStateOf("Ventas") }
-    var participantsText by remember { mutableStateOf("Edgar Gomez, Juan Perez, Génesis Rivas") }
+    var meetingTitle by remember { mutableStateOf("") }
+    var locationName by remember { mutableStateOf("") }
+    var categoryName by remember { mutableStateOf("") }
+    var participantsText by remember { mutableStateOf("") }
 
     var pendingAction by remember { mutableStateOf<(() -> Unit)?>(null) }
 
@@ -219,8 +219,13 @@ fun RecordMeetingScreen(
                         Surface(
                             onClick = {
                                 requireMicPermission {
-                                    val parts = participantsText.split(",").map { it.trim() }
-                                    viewModel.startRecording(meetingTitle, locationName, categoryName, parts)
+                                    val parts = participantsText.split(",").map { it.trim() }.filter { it.isNotBlank() }
+                                    viewModel.startRecording(
+                                        title = meetingTitle.ifBlank { "Reunión sin título" },
+                                        location = locationName.ifBlank { "Sin ubicación" },
+                                        category = categoryName.ifBlank { "General" },
+                                        participants = parts
+                                    )
                                 }
                             },
                             shape = CircleShape,

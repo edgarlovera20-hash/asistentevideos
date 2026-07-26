@@ -338,65 +338,46 @@ class GeminiMeetingService {
 
     private fun generateFallbackAnalysis(transcript: String, title: String): MeetingAnalysisResult {
         val tasks = mutableListOf(
-            ParsedTask("Enviar propuesta formal y presupuesto", "Juan Perez", "En 3 días", "Alta"),
-            ParsedTask("Revisar contrato legal y términos Telmex", "Edgar Gomez", "Próximo Lunes", "Alta"),
-            ParsedTask("Coordinar sesión de seguimiento con Génesis", "Ana Martinez", "En 5 días", "Media")
+            ParsedTask("Enviar propuesta o resumen a las partes involucradas", "Sin asignar", "En 3 días", "Alta"),
+            ParsedTask("Revisar términos y documentación pendiente", "Sin asignar", "Próximo Lunes", "Alta"),
+            ParsedTask("Coordinar sesión de seguimiento", "Sin asignar", "En 5 días", "Media")
         )
         val agreements = listOf(
-            "Se aprueba el calendario de implementación para el siguiente trimestre.",
-            "Edgar asumirá la supervisión técnica del módulo empresarial.",
-            "Se acuerda enviar reporte ejecutivo a dirección el día viernes."
+            "Se aprueba el calendario de implementación propuesto.",
+            "Se acuerda enviar un reporte de seguimiento a los involucrados."
         )
         return MeetingAnalysisResult(
-            summary = "En la sesión \"$title\", el equipo revisó el estado de los avances clave, analizó acuerdos con clientes estratégicos (incluyendo Telmex y proyectos corporativos) y definió asignaciones urgentes.",
+            summary = "No se pudo generar un análisis con Gemini para \"$title\" (sin conexión o sin API key configurada). Este es un resumen de respaldo genérico — revisa la transcripción completa para el detalle real.",
             agreements = agreements,
             tasks = tasks,
-            risks = listOf("Posible retraso en aprobación presupuestal de terceros.", "Dependencia de validación de credenciales API."),
-            sentimentLabel = "Positivo",
-            sentimentScore = 0.88f,
-            emotionalLevel = "Alta Energía / Colaborativo",
-            conclusion = "La reunión concluyó de forma productiva con consenso total de los participantes sobre las prioridades inmediatas."
+            risks = listOf("Análisis de IA no disponible en este momento."),
+            sentimentLabel = "Sin analizar",
+            sentimentScore = 0f,
+            emotionalLevel = "Sin analizar",
+            conclusion = "Reintenta el análisis cuando haya conexión a internet y una API key de Gemini configurada."
         )
     }
 
     private fun generateMockChatResponse(question: String): String {
-        return when {
-            question.contains("tarde", true) -> "Según el registro de la reunión, Juan llegó 18 minutos después del inicio debido a problemas de conexión en carretera."
-            question.contains("ventas", true) -> "En relación con ventas: Edgar confirmó un incremento del 24% en cierres este mes y presentó la propuesta para el contrato con Telmex."
-            question.contains("Edgar", true) -> "Edgar enfatizó la importancia de acelerar la integración con Telmex y se comprometió a entregar la revisión técnica este Lunes."
-            question.contains("Génesis", true) -> "Génesis participó activamente sugiriendo incluir el módulo de reclutamiento y automatización en la entrega final."
-            else -> "Respuesta generada por Heavenly AI: Basado en el historial de reuniones, la transacción de los temas principales abarca avances presupuestales, asignación de tareas con responsables y fechas límite de cumplimiento."
-        }
+        return "No se pudo conectar con Gemini para responder tu pregunta (sin conexión o sin API key configurada). Revisa tu conexión o la configuración de la API key e intenta de nuevo."
     }
 
     private fun generateFallbackDocumentFormat(title: String, format: String): String {
         return when (format) {
             "WORD" -> """
                 ====================================================
-                MINUTA OFICIAL DE REUNIÓN - HEAVENLY AI MEETINGS
+                MINUTA DE REUNIÓN — DOCUMENTO DE RESPALDO
                 ====================================================
                 Título: $title
                 Fecha: ${java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault()).format(java.util.Date())}
-                Estado: Aprobado por IA & Supervisor
-                
-                1. RESUMEN EJECUTIVO
-                Reunión estratégica orientada al cumplimiento de objetivos corporativos,
-                revisión de clientes principales (Telmex, Netflix, CRM) y asignación de tareas.
-                
-                2. ACUERDOS Y DECISIONES
-                - Aprobación unánime del presupuesto operativo.
-                - Firma de compromiso de entregables para la siguiente semana.
-                
-                3. MATRIZ DE RESPONSABILIDAD
-                - Edgar Gomez -> Revisión técnica y contratos.
-                - Juan Perez -> Propuesta comercial y seguimiento.
-                - Génesis -> Coordinación de reclutamiento y plantilla.
+                Estado: No se pudo generar con Gemini (sin conexión o sin API key)
+
+                Este documento es un respaldo genérico. Revisa la transcripción y
+                vuelve a intentar la generación cuando haya conexión disponible.
             """.trimIndent()
             "EXCEL" -> """
                 ID,Módulo,Tarea/Pendiente,Responsable,Fecha Límite,Prioridad,Estado
-                101,Ventas,Enviar propuesta formal a Telmex,Juan Perez,En 3 días,Alta,Pendiente
-                102,Legal,Revisión de cláusulas contractuales,Edgar Gomez,Próximo Lunes,Alta,En Progreso
-                103,RRHH,Gestión de expedientes de equipo,Génesis,En 5 días,Media,Completado
+                101,General,Documento de respaldo — sin conexión a Gemini,Sin asignar,Pendiente,Media,Pendiente
             """.trimIndent()
             "POWERPOINT" -> """
                 [SLIDE 1] TÍTULO: $title - Presentación Ejecutiva
@@ -407,14 +388,10 @@ class GeminiMeetingService {
             """.trimIndent()
             else -> """
                 ----------------------------------------------------
-                HEAVENLY AI ENTERPRISE - REPORTE EJECUTIVO PDF
+                REPORTE EJECUTIVO — DOCUMENTO DE RESPALDO
                 ----------------------------------------------------
-                Documento generado y con control de acceso interno.
-                
-                MÉTRICAS CLAVE:
-                - Duración: 45 minutos
-                - Sentimiento Global: 88% Positivo (Alta Energía)
-                - Eficiencia de la Sesión: 92/100
+                No se pudo generar con Gemini (sin conexión o sin API key configurada).
+                Revisa la conexión o la configuración de la API key e intenta de nuevo.
             """.trimIndent()
         }
     }
@@ -436,7 +413,7 @@ class GeminiMeetingService {
                 assetType = "EXECUTIVE_POSTER",
                 category = "Reuniones",
                 description = "Resumen de alto impacto con métricas clave, decisiones estratégicas y clima de la sesión.",
-                visualDataJson = """{"nodes":[{"id":"title","label":"$meetingTitle","type":"header"},{"id":"kpi1","label":"Eficiencia 95%","type":"stat"},{"id":"kpi2","label":"Cierre +24% Telmex","type":"stat"},{"id":"kpi3","label":"Clima: Positivo","type":"stat"}]}""",
+                visualDataJson = """{"nodes":[{"id":"title","label":"$meetingTitle","type":"header"},{"id":"kpi1","label":"Resumen pendiente de generar","type":"stat"}]}""",
                 exportFormats = "SVG, PNG, PDF, Canva",
                 mcpSource = "Plantilla local",
                 modelUsed = "Plantilla",
@@ -452,7 +429,7 @@ class GeminiMeetingService {
                 assetType = "MIND_MAP",
                 category = "Reuniones",
                 description = "Desglose conceptual de acuerdos, roles de participantes y dependencias operativas.",
-                visualDataJson = """{"root":"$meetingTitle","children":[{"title":"Estrategia Comercial","nodes":["Contrato Telmex","Incremento +24%","Cierre Mensual"]},{"title":"Arquitectura & IT","nodes":["Gemini Flash API","Control de Acceso","Memoria Vectorial"]},{"title":"RRHH & Selección","nodes":["Génesis Rivas","Módulo Reclutamiento","Expedientes"]}]}""",
+                visualDataJson = """{"root":"$meetingTitle","children":[{"title":"Temas tratados","nodes":["Pendiente de análisis"]}]}""",
                 exportFormats = "SVG, HTML, MindNode, Whimsical",
                 mcpSource = "Plantilla local",
                 modelUsed = "Plantilla",
@@ -468,7 +445,7 @@ class GeminiMeetingService {
                 assetType = "CLOUD_INFRA",
                 category = "Arquitectura",
                 description = "Diagrama C4 y topología de Google Cloud / AWS acordada en la sesión.",
-                visualDataJson = """graph TD\n    A[Mobile App - Jetpack Compose] -->|HTTPS/gRPC| B[AI Orchestrator]\n    B --> C[Model Router]\n    C -->|Gemini 2.5 Flash| D[Skill Engine]\n    C -->|Visual Intelligence| E[Visual Engine]\n    D --> F[Room Local DB]\n    E --> G[Figma & Canva MCP]""",
+                visualDataJson = """graph TD\n    A[Mobile App - Jetpack Compose] -->|HTTPS| B[Gemini API]\n    B --> C[Room Local DB]""",
                 exportFormats = "Mermaid, PlantUML, SVG, Figma",
                 mcpSource = "Plantilla local",
                 modelUsed = "Plantilla",
@@ -500,7 +477,7 @@ class GeminiMeetingService {
                 assetType = "ROADMAP",
                 category = "Negocio",
                 description = "Diagrama de secuencia de procesos de negocio y hoja de ruta de implementación a 30 días.",
-                visualDataJson = """{"phases":[{"name":"Semana 1","tasks":["Firma de Contrato Telmex","Auditoría de Control de Acceso"]},{"name":"Semana 2","tasks":["Despliegue Visual Intelligence Engine","Pruebas Figma/Canva MCP"]},{"name":"Semana 3","tasks":["Capacitación de RRHH","Entrega a Dirección"]}]}""",
+                visualDataJson = """{"phases":[{"name":"Semana 1","tasks":["Pendiente de definir"]}]}""",
                 exportFormats = "SVG, Lucidchart, Miro, PDF",
                 mcpSource = "Plantilla local",
                 modelUsed = "Plantilla",
