@@ -49,7 +49,7 @@ class AnthropicTextService(
         try {
             parseMeetingAnalysisText(retryIO { complete(buildAnalysisPrompt(transcript, participants, meetingTitle)) })
         } catch (e: Exception) {
-            fallbackAnalysis("Anthropic Claude", meetingTitle)
+            fallbackAnalysis("Anthropic Claude", meetingTitle, com.example.data.api.describeError(e))
         }
 
     override suspend fun chat(meetingContext: String, userQuestion: String, chatHistory: List<Pair<String, String>>): String =
@@ -63,13 +63,13 @@ class AnthropicTextService(
         try {
             retryIO { complete(buildDocumentPrompt(meetingTitle, transcript, analysis, formatType)) }
         } catch (e: Exception) {
-            fallbackDocument("Anthropic Claude", meetingTitle)
+            fallbackDocument("Anthropic Claude", meetingTitle, com.example.data.api.describeError(e))
         }
 
     override suspend fun translate(text: String, targetLanguage: String): String =
         try {
             retryIO { complete(buildTranslatePrompt(text, targetLanguage)) }
         } catch (e: Exception) {
-            "No se pudo traducir con Anthropic Claude (sin conexión o configuración inválida)."
+            "No se pudo traducir con Anthropic Claude (sin conexión o configuración inválida). Detalle: ${com.example.data.api.describeError(e)}"
         }
 }
