@@ -2,47 +2,47 @@ package com.example.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Codex Minimalist Premium Monochrome Palette
-val CodexBlack = Color(0xFF0F0F0F)       // Fondo principal negro profundo
-val CodexDarkSurface = Color(0xFF1C1C1C)  // Paneles en gris oscuro
-val CodexBorder = Color(0xFF2B2B2B)       // Bordes sutiles y gris medio
-val CodexGrayLight = Color(0xFFA0A0A0)    // Gris claro para texto secundario
-val CodexWhite = Color(0xFFFFFFFF)        // Blanco primordial para textos e iconos principales
+// Heavenly AI Meeting Palette — cian/índigo/violeta sobre azul marino, a juego con el
+// ícono (alas + micrófono con halo). Los nombres "Codex*" se conservan porque Theme.kt y
+// varias pantallas los referencian directamente; solo cambian los valores hexadecimales.
+val CodexBlack = Color(0xFF0A0E17)        // Fondo principal — azul marino profundo
+val CodexDarkSurface = Color(0xFF131C2E)  // Paneles
+val CodexBorder = Color(0xFF2E3D60)       // Bordes sutiles
+val CodexGrayLight = Color(0xFF94A3B8)    // Texto secundario
+val CodexWhite = Color(0xFFF1F5F9)        // Texto e iconos principales
 
 // Functional dark neutrals
-val CodexSurfaceVariant = Color(0xFF222222)
-val CodexBorderLight = Color(0xFF383838)
+val CodexSurfaceVariant = Color(0xFF1E2A45)
+val CodexBorderLight = Color(0xFF2E3D60)
 
-// Light-mode counterparts (same monochrome language, inverted)
-val CodexLightBackground = Color(0xFFFAFAFA)
+// Light-mode counterparts
+val CodexLightBackground = Color(0xFFF8FAFC)
 val CodexLightSurface = Color(0xFFFFFFFF)
-val CodexLightBorder = Color(0xFFE0E0E0)
-val CodexLightGrayText = Color(0xFF5C5C5C)
-val CodexLightSurfaceVariant = Color(0xFFF0F0F0)
-val CodexBlackText = Color(0xFF0F0F0F)
+val CodexLightBorder = Color(0xFFE2E8F0)
+val CodexLightGrayText = Color(0xFF64748B)
+val CodexLightSurfaceVariant = Color(0xFFE2E8F0)
+val CodexBlackText = Color(0xFF0F172A)
 
-// Monochromatic legacy mapping for full backward compatibility
-val CyanPrimary = Color(0xFFFFFFFF)
-val CyanPrimaryDark = Color(0xFFA0A0A0)
-val IndigoSecondary = Color(0xFFE0E0E0)
-val VioletAccent = Color(0xFFD0D0D0)
+// Semantic accent palette — used directly by several screens (Reminders, Visual IA, etc.)
+val CyanPrimary = Color(0xFF00E5FF)
+val CyanPrimaryDark = Color(0xFF00B8D4)
+val IndigoSecondary = Color(0xFF6C5CE7)
+val VioletAccent = Color(0xFFA855F7)
 
 val DarkBackground = CodexBlack
 val DarkSurface = CodexDarkSurface
 val DarkSurfaceVariant = CodexSurfaceVariant
 val DarkCardBorder = CodexBorder
 
-val LightBackground = CodexBlack
-val LightSurface = CodexDarkSurface
-val LightSurfaceVariant = CodexSurfaceVariant
+val LightBackground = CodexLightBackground
+val LightSurface = CodexLightSurface
+val LightSurfaceVariant = CodexLightSurfaceVariant
 
-val EmeraldSuccess = Color(0xFFE0E0E0)
-val AmberWarning = Color(0xFFCCCCCC)
-val RoseDanger = Color(0xFFB0B0B0)
+val EmeraldSuccess = Color(0xFF10B981)
+val AmberWarning = Color(0xFFF59E0B)
+val RoseDanger = Color(0xFFEF4444)
 
 val TextPrimaryDark = CodexWhite
 val TextSecondaryDark = CodexGrayLight
-val TextPrimaryLight = CodexWhite
-val TextSecondaryLight = CodexGrayLight
-
-
+val TextPrimaryLight = CodexBlackText
+val TextSecondaryLight = CodexLightGrayText
