@@ -28,7 +28,7 @@ class GoogleAuthManager(context: Context) {
         const val DRIVE_FILE_SCOPE = "https://www.googleapis.com/auth/drive.file"
 
         // Replace with the "Web" OAuth Client ID created in Google Cloud Console (see README).
-        const val WEB_CLIENT_ID = "REPLACE_WITH_WEB_OAUTH_CLIENT_ID"
+        const val WEB_CLIENT_ID = "235093422193-f7drutnpnof7fqm28qe029fii0r4kjdn.apps.googleusercontent.com"
 
         private const val PREFS_NAME = "google_auth"
         private const val KEY_ACCESS_TOKEN = "access_token"
@@ -46,6 +46,10 @@ class GoogleAuthManager(context: Context) {
     fun buildAuthorizationRequest(): AuthorizationRequest =
         AuthorizationRequest.builder()
             .setRequestedScopes(listOf(Scope(CALENDAR_READONLY_SCOPE), Scope(DRIVE_FILE_SCOPE)))
+            // requestOfflineAccess is what actually uses WEB_CLIENT_ID — without it the
+            // constant just sat there unused. This also gets us a server auth code path
+            // instead of relying purely on the ~50min expiry guess in saveResult().
+            .requestOfflineAccess(WEB_CLIENT_ID)
             .build()
 
     /** Launched from the UI (needs an Activity to resolve consent if not already granted). */
