@@ -118,7 +118,7 @@ fun DashboardScreen(
                 HeaderBanner(
                     title = "Memoria Corporativa Activa",
                     subtitle = "Todas tus reuniones transcritas, resumidas e indexadas en tiempo real con Gemini 2.5 Pro.",
-                    roleTag = "${currentUser.provider.label} • AES-256"
+                    roleTag = currentUser.provider.label
                 )
             }
 

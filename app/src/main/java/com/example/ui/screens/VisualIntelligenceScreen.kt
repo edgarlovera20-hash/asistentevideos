@@ -48,8 +48,8 @@ fun VisualIntelligenceScreen(
 
     var activeTab by remember { mutableStateOf(0) } // 0: Centro Visual & Activos, 1: 30 Skills Engine, 2: Model Router & MCP, 3: 11 Agentes & Entregables
     var selectedAssetForPreview by remember { mutableStateOf<VisualAssetEntity?>(null) }
-    var selectedModel by remember { mutableStateOf("Gemini Vision") }
-    var selectedMcp by remember { mutableStateOf("Figma MCP") }
+    var selectedModel by remember { mutableStateOf("Plantilla") }
+    var selectedMcp by remember { mutableStateOf("Plantilla local") }
 
     val allVisualSkills = listOf(
         Pair("GenerateMindMap", "Mapas Mentales"),
@@ -138,7 +138,7 @@ fun VisualIntelligenceScreen(
                 Text("Skill Engine (30)", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelSmall, color = if (activeTab == 1) CodexWhite else CodexGrayLight)
             }
             Tab(selected = activeTab == 2, onClick = { activeTab = 2 }) {
-                Text("Model Router & MCP", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelSmall, color = if (activeTab == 2) CodexWhite else CodexGrayLight)
+                Text("Etiquetas & Exportación", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelSmall, color = if (activeTab == 2) CodexWhite else CodexGrayLight)
             }
             Tab(selected = activeTab == 3, onClick = { activeTab = 3 }) {
                 Text("11 Agentes & Entregables", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelSmall, color = if (activeTab == 3) CodexWhite else CodexGrayLight)
@@ -300,12 +300,12 @@ fun VisualIntelligenceScreen(
                 ) {
                     item {
                         Text(
-                            text = "🔀 Model Router Inteligente",
+                            text = "🏷️ Etiqueta del entregable",
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onBackground
                         )
                         Text(
-                            text = "Selección automática o manual del modelo especializado según el tipo de entregable:",
+                            text = "Los activos se generan con una plantilla local — esta etiqueta solo describe el tipo de entregable, no selecciona un modelo de IA distinto.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -366,27 +366,31 @@ fun VisualIntelligenceScreen(
                     item {
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "🔌 Integraciones MCP (Model Context Protocol)",
+                            text = "📤 Formatos de exportación (plantilla local)",
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onBackground
+                        )
+                        Text(
+                            text = "Los activos se generan localmente. Estos son los formatos de archivo pensados para cada uno — no hay conexión en vivo con estos servicios.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
                     item {
-                        val mcpServers = listOf(
-                            "Figma MCP" to "Exportación de wireframes y design systems a capas de Figma",
-                            "Canva MCP" to "Sincronización de presentaciones e infografías ejecutivas",
-                            "Miro MCP" to "Whiteboards colaborativos y mapas de empatía",
-                            "Excalidraw MCP" to "Diagramación libre y prototipado rápido",
-                            "Lucidchart MCP" to "Diagramas de procesos BPMN corporativos",
-                            "Whimsical MCP" to "Mapas mentales y flujogramas de producto",
-                            "Confluence MCP" to "Documentación técnica en wiki corporativa",
-                            "Google Slides MCP" to "Generación directa de diapositivas en Google Workspace"
+                        val exportTargets = listOf(
+                            "Figma" to "Wireframes y design systems compatibles con capas de Figma",
+                            "Canva" to "Presentaciones e infografías ejecutivas",
+                            "Miro" to "Whiteboards colaborativos y mapas de empatía",
+                            "Excalidraw" to "Diagramación libre y prototipado rápido",
+                            "Lucidchart" to "Diagramas de procesos BPMN",
+                            "Whimsical" to "Mapas mentales y flujogramas",
+                            "Confluence" to "Documentación técnica exportable",
+                            "Google Slides" to "Diapositivas exportables a Google Workspace"
                         )
 
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            mcpServers.forEach { (mcpName, desc) ->
-                                var isConnected by remember { mutableStateOf(true) }
+                            exportTargets.forEach { (targetName, desc) ->
                                 Surface(
                                     shape = RoundedCornerShape(12.dp),
                                     color = MaterialTheme.colorScheme.surface,
@@ -400,7 +404,7 @@ fun VisualIntelligenceScreen(
                                     ) {
                                         Column(modifier = Modifier.weight(1f)) {
                                             Text(
-                                                text = mcpName,
+                                                text = targetName,
                                                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                                                 color = MaterialTheme.colorScheme.onSurface
                                             )
@@ -410,10 +414,6 @@ fun VisualIntelligenceScreen(
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                         }
-                                        Switch(
-                                            checked = isConnected,
-                                            onCheckedChange = { isConnected = it }
-                                        )
                                     }
                                 }
                             }

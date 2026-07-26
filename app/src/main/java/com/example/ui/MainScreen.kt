@@ -39,13 +39,32 @@ fun MainScreen(
         }
     }
 
-    // Deep Link auto join trigger
+    // Deep Link join: ask for confirmation before touching the microphone —
+    // opening a link (from anywhere) should never silently start a recording.
+    var pendingDeepLinkUrl by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(initialDeepLinkUrl) {
         if (!initialDeepLinkUrl.isNullOrEmpty()) {
-            viewModel.joinMeetingFromUrl(initialDeepLinkUrl)
-            selectedTab = 1
+            pendingDeepLinkUrl = initialDeepLinkUrl
             onDeepLinkConsumed()
         }
+    }
+
+    pendingDeepLinkUrl?.let { url ->
+        AlertDialog(
+            onDismissRequest = { pendingDeepLinkUrl = null },
+            title = { Text("¿Conectar y grabar audio?") },
+            text = { Text("Este enlace quiere iniciar una reunión y grabar audio del micrófono:\n\n$url") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.joinMeetingFromUrl(url)
+                    selectedTab = 1
+                    pendingDeepLinkUrl = null
+                }) { Text("Conectar y grabar") }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingDeepLinkUrl = null }) { Text("Cancelar") }
+            }
+        )
     }
 
     // Default select first meeting if available when opening detail or chat

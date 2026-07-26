@@ -33,7 +33,7 @@ fun EnterpriseMemoryScreen(
 ) {
     val searchQuery by viewModel.searchQuery.collectAsState()
     val searchResults by viewModel.searchResults.collectAsState()
-    val auditLogs by UserSessionManager.auditLogs.collectAsState()
+    val auditLogs by viewModel.auditLogs.collectAsState()
     val currentUser by UserSessionManager.currentUser.collectAsState()
 
     var activeTab by remember { mutableStateOf(0) } // 0: Memoria & Búsqueda, 1: Integraciones, 2: Seguridad & Logs
@@ -56,7 +56,7 @@ fun EnterpriseMemoryScreen(
     ) {
         HeaderBanner(
             title = "Memoria Empresarial & Seguridad",
-            subtitle = "Indexación semántica global y gobernanza de datos AES-256",
+            subtitle = "Indexación semántica global y gobernanza de datos",
             roleTag = currentUser.role.label
         )
 
@@ -82,7 +82,7 @@ fun EnterpriseMemoryScreen(
                 Text("Integraciones (9)", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelMedium, color = if (activeTab == 1) CodexWhite else CodexGrayLight)
             }
             Tab(selected = activeTab == 2, onClick = { activeTab = 2 }) {
-                Text("Seguridad AES-256", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelMedium, color = if (activeTab == 2) CodexWhite else CodexGrayLight)
+                Text("Seguridad", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelMedium, color = if (activeTab == 2) CodexWhite else CodexGrayLight)
             }
         }
 
@@ -267,7 +267,10 @@ fun EnterpriseMemoryScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                text = log,
+                                text = "${
+                                    java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
+                                        .format(java.util.Date(log.timestampMs))
+                                } - ${log.message}",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = CodexGrayLight,
                                 modifier = Modifier.padding(10.dp)

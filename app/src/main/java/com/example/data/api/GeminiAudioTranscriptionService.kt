@@ -80,19 +80,21 @@ class GeminiAudioTranscriptionService {
                     [00:00] Persona 1 (Nombre): Texto transcrito.
                 """.trimIndent()
 
-                val response = RetrofitClient.api.generateContent(
-                    apiKey = apiKey,
-                    request = GeminiRequest(
-                        contents = listOf(
-                            GeminiContent(
-                                parts = listOf(
-                                    GeminiPart(inlineData = GeminiInlineData(mimeType = mimeType, data = Base64.encodeToString(audioBytes, Base64.NO_WRAP))),
-                                    GeminiPart(text = promptText)
+                val response = retryIO {
+                    RetrofitClient.api.generateContent(
+                        apiKey = apiKey,
+                        request = GeminiRequest(
+                            contents = listOf(
+                                GeminiContent(
+                                    parts = listOf(
+                                        GeminiPart(inlineData = GeminiInlineData(mimeType = mimeType, data = Base64.encodeToString(audioBytes, Base64.NO_WRAP))),
+                                        GeminiPart(text = promptText)
+                                    )
                                 )
                             )
                         )
                     )
-                )
+                }
                 val responseText = response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text
 
                 if (!responseText.isNullOrBlank()) {

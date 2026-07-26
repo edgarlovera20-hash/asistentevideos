@@ -87,6 +87,13 @@ data class VisualAssetEntity(
     val timestampMs: Long = System.currentTimeMillis()
 )
 
+@Entity(tableName = "audit_logs")
+data class AuditLogEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val message: String,
+    val timestampMs: Long = System.currentTimeMillis()
+)
+
 @Entity(tableName = "meeting_summaries")
 data class MeetingSummaryEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
