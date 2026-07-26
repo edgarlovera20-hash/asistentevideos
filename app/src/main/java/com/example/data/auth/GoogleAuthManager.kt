@@ -23,6 +23,9 @@ class GoogleAuthManager(context: Context) {
 
     companion object {
         const val CALENDAR_READONLY_SCOPE = "https://www.googleapis.com/auth/calendar.readonly"
+        // drive.file = least privilege: only touches files this app itself creates, not the
+        // user's whole Drive.
+        const val DRIVE_FILE_SCOPE = "https://www.googleapis.com/auth/drive.file"
 
         // Replace with the "Web" OAuth Client ID created in Google Cloud Console (see README).
         const val WEB_CLIENT_ID = "REPLACE_WITH_WEB_OAUTH_CLIENT_ID"
@@ -42,7 +45,7 @@ class GoogleAuthManager(context: Context) {
 
     fun buildAuthorizationRequest(): AuthorizationRequest =
         AuthorizationRequest.builder()
-            .setRequestedScopes(listOf(Scope(CALENDAR_READONLY_SCOPE)))
+            .setRequestedScopes(listOf(Scope(CALENDAR_READONLY_SCOPE), Scope(DRIVE_FILE_SCOPE)))
             .build()
 
     /** Launched from the UI (needs an Activity to resolve consent if not already granted). */

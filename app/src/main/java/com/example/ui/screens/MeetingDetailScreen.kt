@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import android.content.Intent
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -17,14 +18,34 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.db.ActionTaskEntity
+import com.example.data.db.AgreementEntity
+import com.example.data.db.MeetingEntity
 import com.example.ui.MeetingViewModel
 import com.example.ui.components.SentimentBadge
 import com.example.ui.theme.*
+
+private fun buildShareText(meeting: MeetingEntity, agreements: List<AgreementEntity>, tasks: List<ActionTaskEntity>): String = buildString {
+    appendLine(meeting.title)
+    appendLine()
+    appendLine("Resumen:")
+    appendLine(meeting.executiveSummary ?: "Sin resumen")
+    if (agreements.isNotEmpty()) {
+        appendLine()
+        appendLine("Acuerdos:")
+        agreements.forEach { appendLine("- ${it.agreementText}") }
+    }
+    if (tasks.isNotEmpty()) {
+        appendLine()
+        appendLine("Tareas:")
+        tasks.forEach { appendLine("- ${it.title} (${it.assignee}, ${it.dueDate})") }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -123,6 +144,43 @@ fun MeetingDetailScreen(
             Text("Conversar con esta Reunión (IA Chat)", fontWeight = FontWeight.Bold, color = CodexBlack)
         }
 
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Export row: universal Android share sheet + real Google Drive save
+        val context = LocalContext.current
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedButton(
+                onClick = {
+                    val shareText = buildShareText(currentMeeting, agreements, tasks)
+                    val intent = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_SUBJECT, currentMeeting.title)
+                        putExtra(Intent.EXTRA_TEXT, shareText)
+                    }
+                    context.startActivity(Intent.createChooser(intent, "Compartir reunión"))
+                },
+                modifier = Modifier.weight(1f).testTag("share_meeting_button")
+            ) {
+                Icon(imageVector = Icons.Default.Share, contentDescription = null, tint = CodexWhite, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("Compartir...", color = CodexWhite)
+            }
+            OutlinedButton(
+                onClick = {
+                    val content = buildShareText(currentMeeting, agreements, tasks)
+                    viewModel.saveToGoogleDrive(currentMeeting.title, content)
+                },
+                modifier = Modifier.weight(1f).testTag("save_to_drive_button")
+            ) {
+                Icon(imageVector = Icons.Default.CloudUpload, contentDescription = null, tint = CodexWhite, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("Guardar en Drive", color = CodexWhite)
+            }
+        }
+
         Spacer(modifier = Modifier.height(12.dp))
 
         // Segmented Tab Row
@@ -179,7 +237,18 @@ fun MeetingDetailScreen(
                 )
                 3 -> ActionsAndTranslationTab(
                     onTranslate = { lang -> viewModel.translateMeeting(lang) },
-                    onAction = { action -> viewModel.executeActionWorkflow(action) }
+                    onAction = { action -> viewModel.executeActionWorkflow(action) },
+                    onShare = {
+                        val intent = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_SUBJECT, currentMeeting.title)
+                            putExtra(Intent.EXTRA_TEXT, buildShareText(currentMeeting, agreements, tasks))
+                        }
+                        context.startActivity(Intent.createChooser(intent, "Compartir reunión"))
+                    },
+                    onSaveDrive = {
+                        viewModel.saveToGoogleDrive(currentMeeting.title, buildShareText(currentMeeting, agreements, tasks))
+                    }
                 )
                 4 -> MeetingVisualAssetsTab(
                     visualAssets = visualAssets,
@@ -495,7 +564,9 @@ fun DocumentGeneratorTab(
 @Composable
 fun ActionsAndTranslationTab(
     onTranslate: (String) -> Unit,
-    onAction: (String) -> Unit
+    onAction: (String) -> Unit,
+    onShare: () -> Unit,
+    onSaveDrive: () -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -536,14 +607,14 @@ fun ActionsAndTranslationTab(
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(
-                    Pair("Enviar correo resumen vía Gmail", Icons.Default.Email),
-                    Pair("Crear eventos en Google Calendar", Icons.Default.CalendarToday),
-                    Pair("Enviar reporte rápido a WhatsApp Business", Icons.Default.Send),
-                    Pair("Crear tareas en Gestor de Proyectos", Icons.Default.TaskAlt),
-                    Pair("Generar minuta firmada en Drive", Icons.Default.CloudUpload)
-                ).forEach { (actionTitle, icon) ->
+                    Triple("Enviar por correo (Gmail y más)", Icons.Default.Email, onShare),
+                    Triple("Crear eventos en Google Calendar", Icons.Default.CalendarToday, null),
+                    Triple("Enviar reporte rápido a WhatsApp Business", Icons.Default.Send, null),
+                    Triple("Crear tareas en Gestor de Proyectos", Icons.Default.TaskAlt, null),
+                    Triple("Guardar minuta en Drive", Icons.Default.CloudUpload, onSaveDrive)
+                ).forEach { (actionTitle, icon, realAction) ->
                     Surface(
-                        onClick = { onAction(actionTitle) },
+                        onClick = { realAction?.invoke() ?: onAction(actionTitle) },
                         shape = RoundedCornerShape(10.dp),
                         color = CodexDarkSurface,
                         border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder),

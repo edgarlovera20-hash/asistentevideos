@@ -3,8 +3,10 @@ package com.example.ui
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.data.api.GoogleDriveService
 import com.example.data.audio.AudioRecordingForegroundService
 import com.example.data.audio.RealtimeAudioRecorder
+import com.example.data.auth.GoogleAuthManager
 import com.example.data.db.*
 import com.example.data.repository.MeetingRepository
 import kotlinx.coroutines.Job
@@ -17,6 +19,8 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
     private val db = AppDatabase.getDatabase(application)
     private val repository = MeetingRepository(db.meetingDao())
     val audioRecorder = RealtimeAudioRecorder(application)
+    val authManager = GoogleAuthManager(application)
+    private val driveService = GoogleDriveService()
 
     val meetings: StateFlow<List<MeetingEntity>> = repository.allMeetings
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -387,6 +391,28 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
             } catch (e: Exception) {
                 _errorMessage.value = "No se pudo eliminar la reunión: ${e.message ?: "error desconocido"}"
             }
+        }
+    }
+
+    /** Saves a text file with the given content to the user's Google Drive. Requires the
+     * Google account to already be connected (from the "Avisos" screen) — this doesn't
+     * re-run the consent flow here to avoid duplicating that UI in a second place. */
+    fun saveToGoogleDrive(title: String, content: String) {
+        viewModelScope.launch {
+            val token = authManager.getAccessToken()
+            if (token == null) {
+                _errorMessage.value = "Conecta tu cuenta de Google primero desde la pestaña Avisos."
+                return@launch
+            }
+            try {
+                driveService.createTextFile(token, title, content)
+                _actionFeedback.value = "Guardado en Google Drive."
+                repository.addAuditLog("Reunión \"$title\" guardada en Google Drive.")
+            } catch (e: Exception) {
+                _errorMessage.value = "No se pudo guardar en Drive: ${e.message ?: "error desconocido"}"
+            }
+            delay(2000)
+            _actionFeedback.value = null
         }
     }
 
