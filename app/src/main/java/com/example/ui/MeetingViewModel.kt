@@ -3,8 +3,8 @@ package com.example.ui
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.audio.SpeechCaptureController
-import com.example.audio.SpeechCaptureEvent
+import com.example.data.audio.AudioRecordingForegroundService
+import com.example.data.audio.RealtimeAudioRecorder
 import com.example.data.db.*
 import com.example.data.repository.MeetingRepository
 import com.example.data.user.UserSessionManager
@@ -17,7 +17,7 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
 
     private val db = AppDatabase.getDatabase(application)
     private val repository = MeetingRepository(db.meetingDao())
-    private val speechCapture = SpeechCaptureController(application)
+    val audioRecorder = RealtimeAudioRecorder(application)
 
     val meetings: StateFlow<List<MeetingEntity>> = repository.allMeetings
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -75,6 +75,15 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val allVisualAssets: StateFlow<List<VisualAssetEntity>> = repository.allVisualAssets
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val activeVisualAssets: StateFlow<List<VisualAssetEntity>> = _currentMeetingId
+        .flatMapLatest { id ->
+            if (id != null) repository.getVisualAssets(id) else repository.allVisualAssets
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     // Recording State
     private val _isRecording = MutableStateFlow(false)
     val isRecording: StateFlow<Boolean> = _isRecording.asStateFlow()
@@ -104,7 +113,6 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
     private var recordingTimerJob: Job? = null
-    private var speechCaptureJob: Job? = null
 
     fun dismissError() {
         _errorMessage.value = null
@@ -139,9 +147,9 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
                 category = info.category,
                 participants = info.defaultParticipants
             )
-            _actionFeedback.value = "Conectado exitosamente a ${info.platformName}. Captura de audio en vivo activada."
+            _actionFeedback.value = "Conectado a ${info.platformName}. Grabando audio del micrófono."
             UserSessionManager.addAuditLog("Conexión externa activada por Deep Link / QR: ${info.platformName} - URL: $cleanUrl")
-            beginLiveCapture(id, info.defaultParticipants.firstOrNull() ?: "Micrófono")
+            beginRecording(id, titleToUse, info.defaultParticipants.firstOrNull() ?: "Micrófono")
         }
     }
 
@@ -207,13 +215,18 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
     ) {
         viewModelScope.launch {
             val id = repository.createMeeting(title, location, category, participants)
-            UserSessionManager.addAuditLog("Nueva grabación iniciada: \"$title\"")
-            beginLiveCapture(id, participants.firstOrNull() ?: "Micrófono")
+            beginRecording(id, title, participants.firstOrNull() ?: "Micrófono")
         }
     }
 
-    /** Starts real microphone capture: live speech-to-text transcript + real waveform amplitude. */
-    private fun beginLiveCapture(meetingId: Long, speakerLabel: String) {
+    /** Starts real MediaRecorder capture + foreground service. Transcription happens once, from the real file, on stop. */
+    private fun beginRecording(meetingId: Long, title: String, speakerLabel: String) {
+        val started = audioRecorder.startRecording()
+        if (!started) {
+            _errorMessage.value = "No se pudo iniciar la grabación: falta permiso de micrófono o el hardware no está disponible."
+            return
+        }
+
         _currentMeetingId.value = meetingId
         _isRecording.value = true
         _isPaused.value = false
@@ -221,48 +234,38 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
         _audioAmplitudes.value = emptyList()
         _activeSpeaker.value = "Persona 1 ($speakerLabel)"
 
+        AudioRecordingForegroundService.startService(getApplication(), title)
+        UserSessionManager.addAuditLog("Nueva grabación iniciada: \"$title\"")
+
         recordingTimerJob?.cancel()
         recordingTimerJob = viewModelScope.launch {
             while (_isRecording.value) {
                 delay(1000)
-                if (!_isPaused.value) _recordingDuration.value += 1
-            }
-        }
-
-        speechCaptureJob?.cancel()
-        speechCaptureJob = viewModelScope.launch {
-            try {
-                speechCapture.events().collect { event ->
-                    if (_isPaused.value) return@collect
-                    when (event) {
-                        is SpeechCaptureEvent.Amplitude -> {
-                            _audioAmplitudes.value = (_audioAmplitudes.value + event.normalized).takeLast(30)
-                        }
-                        is SpeechCaptureEvent.FinalResult -> {
-                            repository.addTranscriptSegment(
-                                meetingId = meetingId,
-                                speakerName = speakerLabel,
-                                speakerTag = "Persona 1",
-                                text = event.text,
-                                timestampMs = _recordingDuration.value * 1000L
-                            )
-                        }
-                    }
+                if (!_isPaused.value) {
+                    _recordingDuration.value += 1
+                    val realAmp = audioRecorder.currentAmplitude.value
+                    _audioAmplitudes.value = (_audioAmplitudes.value + realAmp).takeLast(30)
                 }
-            } catch (e: Exception) {
-                _errorMessage.value = "No se pudo activar el micrófono: ${e.message ?: "permiso denegado o no disponible"}"
             }
         }
     }
 
     fun pauseRecording() {
-        _isPaused.value = true
-        UserSessionManager.addAuditLog("Grabación pausada temporalmente.")
+        if (audioRecorder.pauseRecording()) {
+            _isPaused.value = true
+            UserSessionManager.addAuditLog("Grabación pausada temporalmente.")
+        } else {
+            _errorMessage.value = "No se pudo pausar la grabación."
+        }
     }
 
     fun resumeRecording() {
-        _isPaused.value = false
-        UserSessionManager.addAuditLog("Grabación reanudada.")
+        if (audioRecorder.resumeRecording()) {
+            _isPaused.value = false
+            UserSessionManager.addAuditLog("Grabación reanudada.")
+        } else {
+            _errorMessage.value = "No se pudo reanudar la grabación."
+        }
     }
 
     fun stopRecordingAndAnalyze() {
@@ -271,7 +274,9 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
             _isRecording.value = false
             _isPaused.value = false
             recordingTimerJob?.cancel()
-            speechCaptureJob?.cancel()
+
+            val recordedFile = audioRecorder.stopRecording()
+            AudioRecordingForegroundService.stopService(getApplication())
 
             val currentMeeting = activeMeeting.value
             if (currentMeeting != null) {
@@ -279,9 +284,21 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
             }
 
             _isAnalyzingAI.value = true
-            UserSessionManager.addAuditLog("Enviando transcripción a Gemini 2.5 Pro para análisis multivariable...")
-
             try {
+                if (recordedFile != null && recordedFile.exists() && recordedFile.length() > 0L) {
+                    UserSessionManager.addAuditLog("Transcribiendo audio grabado con Gemini...")
+                    val participantsList = activeParticipants.value.map { it.name }
+                    repository.processRecordedAudioFile(
+                        meetingId = meetingId,
+                        audioFile = recordedFile,
+                        meetingTitle = currentMeeting?.title ?: "Reunión Grabada",
+                        participants = participantsList
+                    )
+                } else {
+                    _errorMessage.value = "La grabación no produjo audio; no hay transcripción para analizar."
+                }
+
+                UserSessionManager.addAuditLog("Enviando transcripción a Gemini para análisis multivariable...")
                 repository.analyzeMeetingWithAI(meetingId)
                 UserSessionManager.addAuditLog("Análisis inteligente completado. Resumen, tareas y minutas generadas.")
             } catch (e: Exception) {
@@ -290,6 +307,12 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
                 _isAnalyzingAI.value = false
             }
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        recordingTimerJob?.cancel()
+        audioRecorder.release()
     }
 
     fun sendChatMessage(messageText: String) {
@@ -367,10 +390,28 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        recordingTimerJob?.cancel()
-        speechCaptureJob?.cancel()
+    fun executeVisualSkill(skillName: String, assetType: String = "DIAGRAM", mcp: String = "Plantilla local", model: String = "Plantilla") {
+        viewModelScope.launch {
+            _actionFeedback.value = "Generando: $skillName..."
+            try {
+                delay(1000)
+                repository.createVisualAsset(
+                    meetingId = _currentMeetingId.value,
+                    title = skillName,
+                    assetType = assetType,
+                    category = "Reuniones & Arquitectura",
+                    description = "Activo visual generado a partir de una plantilla local para $skillName.",
+                    mcpSource = mcp,
+                    modelUsed = model
+                )
+                _actionFeedback.value = "¡$skillName generado!"
+                UserSessionManager.addAuditLog("Visual Skill ejecutado: $skillName")
+            } catch (e: Exception) {
+                _errorMessage.value = "No se pudo generar $skillName: ${e.message ?: "error desconocido"}"
+            }
+            delay(2500)
+            _actionFeedback.value = null
+        }
     }
 }
 

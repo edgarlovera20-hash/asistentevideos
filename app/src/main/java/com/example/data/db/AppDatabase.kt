@@ -12,9 +12,11 @@ import androidx.room.RoomDatabase
         TranscriptSegmentEntity::class,
         ActionTaskEntity::class,
         AgreementEntity::class,
-        ChatMessageEntity::class
+        ChatMessageEntity::class,
+        VisualAssetEntity::class,
+        MeetingSummaryEntity::class
     ],
-    version = 1,
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -30,7 +32,9 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "heavenly_ai_meeting.db"
-                ).build()
+                )
+                .fallbackToDestructiveMigration()
+                .build()
                 INSTANCE = instance
                 instance
             }

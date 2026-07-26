@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.R
 import com.example.ui.screens.*
-import com.example.ui.theme.CyanPrimary
+import com.example.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,18 +65,14 @@ fun MainScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Start
                     ) {
-                        Surface(
-                            shape = RoundedCornerShape(10.dp),
-                            color = Color.Transparent,
-                            border = androidx.compose.foundation.BorderStroke(1.dp, CyanPrimary.copy(alpha = 0.5f)),
-                            modifier = Modifier.size(34.dp)
+                        Box(
+                            modifier = Modifier.size(36.dp),
+                            contentAlignment = Alignment.Center
                         ) {
                             Image(
-                                painter = painterResource(id = R.drawable.app_bot_logo_1785008057179),
+                                painter = painterResource(id = R.drawable.ic_launcher_foreground),
                                 contentDescription = "Bot Asistente",
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .clip(RoundedCornerShape(10.dp))
+                                modifier = Modifier.fillMaxSize()
                             )
                         }
                         Spacer(modifier = Modifier.width(10.dp))
@@ -84,31 +80,39 @@ fun MainScreen(
                             Text(
                                 text = "Heavenly AI",
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = CodexWhite
                             )
                             Text(
                                 text = "Enterprise Meeting Intelligence",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = CyanPrimary
+                                color = CodexGrayLight
                             )
                         }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = CodexDarkSurface
                 )
             )
         },
         bottomBar = {
             NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = CyanPrimary
+                containerColor = CodexDarkSurface,
+                contentColor = CodexWhite
             ) {
+                val navColors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = CodexWhite,
+                    selectedTextColor = CodexWhite,
+                    unselectedIconColor = CodexGrayLight,
+                    unselectedTextColor = CodexGrayLight,
+                    indicatorColor = CodexBorder
+                )
                 NavigationBarItem(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
                     icon = { Icon(Icons.Default.Dashboard, contentDescription = "Dashboard") },
                     label = { Text("Inicio") },
+                    colors = navColors,
                     modifier = Modifier.testTag("nav_item_dashboard")
                 )
                 NavigationBarItem(
@@ -116,6 +120,7 @@ fun MainScreen(
                     onClick = { selectedTab = 1 },
                     icon = { Icon(Icons.Default.Mic, contentDescription = "Grabar") },
                     label = { Text("Grabar") },
+                    colors = navColors,
                     modifier = Modifier.testTag("nav_item_record")
                 )
                 NavigationBarItem(
@@ -123,20 +128,31 @@ fun MainScreen(
                     onClick = { selectedTab = 2 },
                     icon = { Icon(Icons.Default.Analytics, contentDescription = "Análisis") },
                     label = { Text("Análisis") },
+                    colors = navColors,
                     modifier = Modifier.testTag("nav_item_detail")
                 )
                 NavigationBarItem(
                     selected = selectedTab == 3,
                     onClick = { selectedTab = 3 },
-                    icon = { Icon(Icons.Default.Chat, contentDescription = "Chat") },
-                    label = { Text("Chat IA") },
-                    modifier = Modifier.testTag("nav_item_chat")
+                    icon = { Icon(Icons.Default.Palette, contentDescription = "Visual IA") },
+                    label = { Text("Visual IA") },
+                    colors = navColors,
+                    modifier = Modifier.testTag("nav_item_visual")
                 )
                 NavigationBarItem(
                     selected = selectedTab == 4,
                     onClick = { selectedTab = 4 },
+                    icon = { Icon(Icons.Default.Chat, contentDescription = "Chat") },
+                    label = { Text("Chat IA") },
+                    colors = navColors,
+                    modifier = Modifier.testTag("nav_item_chat")
+                )
+                NavigationBarItem(
+                    selected = selectedTab == 5,
+                    onClick = { selectedTab = 5 },
                     icon = { Icon(Icons.Default.ManageSearch, contentDescription = "Memoria") },
                     label = { Text("Memoria") },
+                    colors = navColors,
                     modifier = Modifier.testTag("nav_item_memory")
                 )
             }
@@ -154,7 +170,8 @@ fun MainScreen(
                     onSelectMeeting = { meetingId ->
                         viewModel.selectMeeting(meetingId)
                         selectedTab = 2
-                    }
+                    },
+                    onOpenVisualCenter = { selectedTab = 3 }
                 )
                 1 -> RecordMeetingScreen(
                     viewModel = viewModel,
@@ -162,12 +179,19 @@ fun MainScreen(
                 )
                 2 -> MeetingDetailScreen(
                     viewModel = viewModel,
-                    onOpenChatClick = { selectedTab = 3 }
+                    onOpenChatClick = { selectedTab = 4 }
                 )
-                3 -> MeetingChatScreen(
+                3 -> VisualIntelligenceScreen(
+                    viewModel = viewModel,
+                    onSelectMeeting = { meetingId ->
+                        viewModel.selectMeeting(meetingId)
+                        selectedTab = 2
+                    }
+                )
+                4 -> MeetingChatScreen(
                     viewModel = viewModel
                 )
-                4 -> EnterpriseMemoryScreen(
+                5 -> EnterpriseMemoryScreen(
                     viewModel = viewModel,
                     onSelectMeeting = { meetingId ->
                         viewModel.selectMeeting(meetingId)

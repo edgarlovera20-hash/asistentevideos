@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,7 +40,9 @@ fun MeetingDetailScreen(
     val actionFeedback by viewModel.actionFeedback.collectAsState()
     val isAnalyzing by viewModel.isAnalyzingAI.collectAsState()
 
-    var activeTab by remember { mutableStateOf(0) } // 0: Resumen & IA, 1: Acuerdos & Tareas, 2: Exportar Doc, 3: Traducir & Acciones
+    val visualAssets by viewModel.activeVisualAssets.collectAsState()
+
+    var activeTab by remember { mutableStateOf(0) } // 0: Resumen & IA, 1: Tareas, 2: Generador, 3: Acciones IA, 4: Visual IA
     var showDocModal by remember { mutableStateOf(false) }
 
     if (meeting == null) {
@@ -89,12 +92,12 @@ fun MeetingDetailScreen(
                 Text(
                     text = currentMeeting.title,
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onBackground
+                    color = CodexWhite
                 )
                 Text(
                     text = "${currentMeeting.location} • ${currentMeeting.durationSeconds / 60} min",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = CodexGrayLight
                 )
             }
 
@@ -106,18 +109,18 @@ fun MeetingDetailScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Open Meeting Chat Button (Fase 6 link)
+        // Open Meeting Chat Button (Fase 6 link) - White primary action
         Button(
             onClick = onOpenChatClick,
-            colors = ButtonDefaults.buttonColors(containerColor = IndigoSecondary, contentColor = Color.White),
-            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = CodexWhite, contentColor = CodexBlack),
+            shape = RoundedCornerShape(10.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .testTag("open_meeting_chat_button")
         ) {
-            Icon(imageVector = Icons.Default.Chat, contentDescription = "Chat")
+            Icon(imageVector = Icons.Default.Chat, contentDescription = "Chat", tint = CodexBlack)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("💬 Conversar con esta Reunión (IA Chat)", fontWeight = FontWeight.Bold)
+            Text("Conversar con esta Reunión (IA Chat)", fontWeight = FontWeight.Bold, color = CodexBlack)
         }
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -125,20 +128,31 @@ fun MeetingDetailScreen(
         // Segmented Tab Row
         TabRow(
             selectedTabIndex = activeTab,
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-            contentColor = CyanPrimary
+            containerColor = CodexDarkSurface,
+            contentColor = CodexWhite,
+            indicator = { tabPositions ->
+                if (activeTab < tabPositions.size) {
+                    TabRowDefaults.SecondaryIndicator(
+                        modifier = Modifier.tabIndicatorOffset(tabPositions[activeTab]),
+                        color = CodexWhite
+                    )
+                }
+            }
         ) {
             Tab(selected = activeTab == 0, onClick = { activeTab = 0 }) {
-                Text("Resumen", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelMedium)
+                Text("Resumen", modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.labelSmall, color = if (activeTab == 0) CodexWhite else CodexGrayLight)
             }
             Tab(selected = activeTab == 1, onClick = { activeTab = 1 }) {
-                Text("Tareas (${tasks.size})", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelMedium)
+                Text("Tareas (${tasks.size})", modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.labelSmall, color = if (activeTab == 1) CodexWhite else CodexGrayLight)
             }
             Tab(selected = activeTab == 2, onClick = { activeTab = 2 }) {
-                Text("Generador", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelMedium)
+                Text("Docs", modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.labelSmall, color = if (activeTab == 2) CodexWhite else CodexGrayLight)
             }
             Tab(selected = activeTab == 3, onClick = { activeTab = 3 }) {
-                Text("Acciones IA", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelMedium)
+                Text("Acciones", modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.labelSmall, color = if (activeTab == 3) CodexWhite else CodexGrayLight)
+            }
+            Tab(selected = activeTab == 4, onClick = { activeTab = 4 }) {
+                Text("Visual IA (${visualAssets.size})", modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.labelSmall, color = if (activeTab == 4) CodexWhite else CodexGrayLight)
             }
         }
 
@@ -166,6 +180,10 @@ fun MeetingDetailScreen(
                 3 -> ActionsAndTranslationTab(
                     onTranslate = { lang -> viewModel.translateMeeting(lang) },
                     onAction = { action -> viewModel.executeActionWorkflow(action) }
+                )
+                4 -> MeetingVisualAssetsTab(
+                    visualAssets = visualAssets,
+                    onExecuteSkill = { skill -> viewModel.executeVisualSkill(skill) }
                 )
             }
         }
@@ -213,22 +231,22 @@ fun ExecutiveSummaryTab(
     ) {
         item {
             Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = MaterialTheme.colorScheme.surface,
-                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
+                shape = RoundedCornerShape(12.dp),
+                color = CodexDarkSurface,
+                border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "📝 Resumen Ejecutivo Gemini",
+                        text = "Resumen Ejecutivo Gemini",
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = CyanPrimary
+                        color = CodexWhite
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = meeting.executiveSummary ?: "Sin resumen.",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = CodexWhite
                     )
                 }
             }
@@ -236,28 +254,28 @@ fun ExecutiveSummaryTab(
 
         item {
             Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = MaterialTheme.colorScheme.surface,
-                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
+                shape = RoundedCornerShape(12.dp),
+                color = CodexDarkSurface,
+                border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "🎯 Conclusión & Estado Emocional",
+                        text = "Conclusión & Estado Emocional",
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = IndigoSecondary
+                        color = CodexWhite
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = meeting.conclusions ?: "Sin conclusión.",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = CodexWhite
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = "Nivel Emocional: ${meeting.emotionalLevel ?: "Normal"}",
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                        color = VioletAccent
+                        color = CodexGrayLight
                     )
                 }
             }
@@ -267,14 +285,15 @@ fun ExecutiveSummaryTab(
             Text(
                 text = "Participantes (${participants.size})",
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onBackground
+                color = CodexWhite
             )
         }
 
         items(participants) { participant ->
             Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant,
+                shape = RoundedCornerShape(10.dp),
+                color = CodexDarkSurface,
+                border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
@@ -285,13 +304,13 @@ fun ExecutiveSummaryTab(
                         modifier = Modifier
                             .size(36.dp)
                             .clip(CircleShape)
-                            .background(CyanPrimary.copy(alpha = 0.2f)),
+                            .background(CodexBorder),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = participant.name.take(1),
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                            color = CyanPrimary
+                            color = CodexWhite
                         )
                     }
                     Spacer(modifier = Modifier.width(12.dp))
@@ -299,12 +318,12 @@ fun ExecutiveSummaryTab(
                         Text(
                             text = participant.name,
                             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = CodexWhite
                         )
                         Text(
                             text = "${participant.role} • ${participant.email}",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = CodexGrayLight
                         )
                     }
                 }
@@ -325,29 +344,29 @@ fun TasksAndAgreementsTab(
     ) {
         item {
             Text(
-                text = "📌 Acuerdos de la Reunión",
+                text = "Acuerdos de la Reunión",
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = EmeraldSuccess
+                color = CodexWhite
             )
         }
 
         items(agreements) { agreement ->
             Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = EmeraldSuccess.copy(alpha = 0.1f),
-                border = androidx.compose.foundation.BorderStroke(1.dp, EmeraldSuccess.copy(alpha = 0.3f)),
+                shape = RoundedCornerShape(10.dp),
+                color = CodexDarkSurface,
+                border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
                     modifier = Modifier.padding(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = EmeraldSuccess)
+                    Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = CodexWhite)
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
                         text = agreement.agreementText,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = CodexWhite
                     )
                 }
             }
@@ -356,18 +375,18 @@ fun TasksAndAgreementsTab(
         item {
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "⏳ Tareas y Pendientes Detectados por IA",
+                text = "Tareas y Pendientes Detectados por IA",
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = AmberWarning
+                color = CodexWhite
             )
         }
 
         items(tasks) { task ->
             Surface(
                 onClick = { onToggleTask(task) },
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.surface,
-                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
+                shape = RoundedCornerShape(10.dp),
+                color = CodexDarkSurface,
+                border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder),
                 modifier = Modifier.fillMaxWidth().testTag("task_item_${task.id}")
             ) {
                 Row(
@@ -376,7 +395,12 @@ fun TasksAndAgreementsTab(
                 ) {
                     Checkbox(
                         checked = task.isCompleted,
-                        onCheckedChange = { onToggleTask(task) }
+                        onCheckedChange = { onToggleTask(task) },
+                        colors = CheckboxDefaults.colors(
+                            checkedColor = CodexWhite,
+                            checkmarkColor = CodexBlack,
+                            uncheckedColor = CodexGrayLight
+                        )
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Column(modifier = Modifier.weight(1f)) {
@@ -386,12 +410,12 @@ fun TasksAndAgreementsTab(
                                 fontWeight = FontWeight.Bold,
                                 textDecoration = if (task.isCompleted) androidx.compose.ui.text.style.TextDecoration.LineThrough else null
                             ),
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = CodexWhite
                         )
                         Text(
                             text = "Responsable: ${task.assignee} • Límite: ${task.dueDate} • Prioridad: ${task.priority}",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = CodexGrayLight
                         )
                     }
                 }
@@ -409,14 +433,14 @@ fun DocumentGeneratorTab(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = "📄 Generador de Documentos Corporativos",
+            text = "Generador de Documentos Corporativos",
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onBackground
+            color = CodexWhite
         )
         Text(
             text = "Generación automática con IA formateada para suites de oficina:",
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = CodexGrayLight
         )
 
         Row(
@@ -425,19 +449,21 @@ fun DocumentGeneratorTab(
         ) {
             Button(
                 onClick = { onGenerate("WORD") },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2B579A)),
-                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = CodexDarkSurface, contentColor = CodexWhite),
+                shape = RoundedCornerShape(10.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder),
                 modifier = Modifier.weight(1f).height(50.dp).testTag("generate_word_button")
             ) {
-                Text("📄 Word (.docx)")
+                Text("Word (.docx)")
             }
             Button(
                 onClick = { onGenerate("EXCEL") },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF217346)),
-                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = CodexDarkSurface, contentColor = CodexWhite),
+                shape = RoundedCornerShape(10.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder),
                 modifier = Modifier.weight(1f).height(50.dp).testTag("generate_excel_button")
             ) {
-                Text("📊 Excel (.xlsx)")
+                Text("Excel (.xlsx)")
             }
         }
 
@@ -447,19 +473,20 @@ fun DocumentGeneratorTab(
         ) {
             Button(
                 onClick = { onGenerate("POWERPOINT") },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD24726)),
-                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = CodexDarkSurface, contentColor = CodexWhite),
+                shape = RoundedCornerShape(10.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder),
                 modifier = Modifier.weight(1f).height(50.dp).testTag("generate_ppt_button")
             ) {
-                Text("📈 PowerPoint")
+                Text("PowerPoint")
             }
             Button(
                 onClick = { onGenerate("PDF") },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD9381E)),
-                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = CodexWhite, contentColor = CodexBlack),
+                shape = RoundedCornerShape(10.dp),
                 modifier = Modifier.weight(1f).height(50.dp).testTag("generate_pdf_button")
             ) {
-                Text("📋 PDF Reporte")
+                Text("PDF Reporte", fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -476,9 +503,9 @@ fun ActionsAndTranslationTab(
     ) {
         item {
             Text(
-                text = "🌎 Traducción Multilingüe (Fase 9)",
+                text = "Traducción Multilingüe (Fase 9)",
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = CyanPrimary
+                color = CodexWhite
             )
         }
 
@@ -487,8 +514,9 @@ fun ActionsAndTranslationTab(
                 items(listOf("Español", "Inglés", "Francés", "Alemán", "Japonés", "Portugués")) { lang ->
                     Button(
                         onClick = { onTranslate(lang) },
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = CyanPrimary),
-                        shape = RoundedCornerShape(20.dp)
+                        colors = ButtonDefaults.buttonColors(containerColor = CodexDarkSurface, contentColor = CodexWhite),
+                        shape = RoundedCornerShape(20.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder)
                     ) {
                         Text(lang)
                     }
@@ -499,9 +527,9 @@ fun ActionsAndTranslationTab(
         item {
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = "⚡ IA de Acciones Automáticas (Fase 10)",
+                text = "IA de Acciones Automáticas (Fase 10)",
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = VioletAccent
+                color = CodexWhite
             )
         }
 
@@ -516,26 +544,83 @@ fun ActionsAndTranslationTab(
                 ).forEach { (actionTitle, icon) ->
                     Surface(
                         onClick = { onAction(actionTitle) },
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.surface,
-                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
+                        shape = RoundedCornerShape(10.dp),
+                        color = CodexDarkSurface,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Row(
                             modifier = Modifier.padding(14.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(imageVector = icon, contentDescription = null, tint = VioletAccent)
+                            Icon(imageVector = icon, contentDescription = null, tint = CodexWhite)
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
                                 text = actionTitle,
                                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = CodexWhite
                             )
                         }
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun MeetingVisualAssetsTab(
+    visualAssets: List<com.example.data.db.VisualAssetEntity>,
+    onExecuteSkill: (String) -> Unit
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item {
+            Text(
+                text = "Activos Visuales de la Reunión (${visualAssets.size})",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = CodexWhite
+            )
+            Text(
+                text = "Artefactos diagramados automáticamente por el Visual Intelligence Agent:",
+                style = MaterialTheme.typography.bodySmall,
+                color = CodexGrayLight
+            )
+        }
+
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
+                    onClick = { onExecuteSkill("GenerateMindMap") },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = CodexWhite, contentColor = CodexBlack)
+                ) {
+                    Text("Mapa Mental", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                }
+                Button(
+                    onClick = { onExecuteSkill("GenerateArchitectureDiagram") },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = CodexDarkSurface, contentColor = CodexWhite),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder)
+                ) {
+                    Text("Arquitectura C4", style = MaterialTheme.typography.labelSmall)
+                }
+            }
+        }
+
+        items(visualAssets) { asset ->
+            VisualAssetCard(
+                asset = asset,
+                onPreview = {},
+                onExport = { onExecuteSkill("Exportar ${asset.title}") }
+            )
         }
     }
 }

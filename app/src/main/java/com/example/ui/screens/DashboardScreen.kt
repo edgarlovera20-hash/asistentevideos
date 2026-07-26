@@ -37,7 +37,8 @@ import com.example.ui.theme.*
 fun DashboardScreen(
     viewModel: MeetingViewModel,
     onStartRecordingClick: () -> Unit,
-    onSelectMeeting: (Long) -> Unit
+    onSelectMeeting: (Long) -> Unit,
+    onOpenVisualCenter: () -> Unit = {}
 ) {
     val meetings by viewModel.meetings.collectAsState()
     val allTasks by viewModel.allTasks.collectAsState()
@@ -70,20 +71,20 @@ fun DashboardScreen(
                 Text(
                     text = "Heavenly AI Meeting",
                     style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onBackground
+                    color = CodexWhite
                 )
                 Text(
                     text = "Hola, ${currentUser.name}",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = CodexGrayLight
                 )
             }
 
             Surface(
                 onClick = { showRoleDialog = true },
-                shape = RoundedCornerShape(20.dp),
-                color = CyanPrimary.copy(alpha = 0.15f),
-                border = androidx.compose.foundation.BorderStroke(1.dp, CyanPrimary.copy(alpha = 0.4f)),
+                shape = RoundedCornerShape(12.dp),
+                color = CodexDarkSurface,
+                border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder),
                 modifier = Modifier.testTag("role_switcher_button")
             ) {
                 Row(
@@ -93,14 +94,14 @@ fun DashboardScreen(
                     Icon(
                         imageVector = Icons.Default.AdminPanelSettings,
                         contentDescription = "Rol",
-                        tint = CyanPrimary,
+                        tint = CodexWhite,
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = currentUser.role.label,
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                        color = CyanPrimary
+                        color = CodexWhite
                     )
                 }
             }
@@ -126,20 +127,20 @@ fun DashboardScreen(
                 item {
                     Surface(
                         shape = RoundedCornerShape(12.dp),
-                        color = CyanPrimary.copy(alpha = 0.2f),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, CyanPrimary),
+                        color = CodexDarkSurface,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, CodexWhite),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Row(
                             modifier = Modifier.padding(12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = CyanPrimary)
+                            Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = CodexWhite)
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = actionFeedback!!,
                                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                                color = CyanPrimary
+                                color = CodexWhite
                             )
                         }
                     }
@@ -149,27 +150,58 @@ fun DashboardScreen(
             // Primary Action Buttons Grid
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    // MAIN PRIMARY BUTTON IN PURE WHITE WITH BLACK TEXT
                     Button(
                         onClick = onStartRecordingClick,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp)
                             .testTag("start_meeting_button"),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = CyanPrimary,
-                            contentColor = Color.Black
+                            containerColor = CodexWhite,
+                            contentColor = CodexBlack
                         )
                     ) {
                         Icon(
                             imageVector = Icons.Default.Mic,
                             contentDescription = "Iniciar",
-                            modifier = Modifier.size(22.dp)
+                            tint = CodexBlack,
+                            modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "● INICIAR NUEVA GRABACIÓN",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = CodexBlack
+                        )
+                    }
+
+                    // SECONDARY BUTTON IN DARK GRAY
+                    Button(
+                        onClick = onOpenVisualCenter,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .testTag("visual_intelligence_center_button"),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = CodexDarkSurface,
+                            contentColor = CodexWhite
+                        ),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Palette,
+                            contentDescription = "Visual Center",
+                            tint = CodexWhite,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "VISUAL INTELLIGENCE CENTER (AGENTE #11)",
+                            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                            color = CodexWhite
                         )
                     }
 
@@ -177,49 +209,57 @@ fun DashboardScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        OutlinedButton(
+                        Button(
                             onClick = { showQrScannerModal = true },
                             modifier = Modifier
                                 .weight(1f)
-                                .height(48.dp)
+                                .height(46.dp)
                                 .testTag("scan_qr_button"),
-                            shape = RoundedCornerShape(14.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, CyanPrimary)
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = CodexDarkSurface,
+                                contentColor = CodexWhite
+                            ),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.QrCodeScanner,
                                 contentDescription = "QR",
-                                tint = CyanPrimary,
-                                modifier = Modifier.size(18.dp)
+                                tint = CodexWhite,
+                                modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = "Escanear QR",
                                 style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                                color = CyanPrimary
+                                color = CodexWhite
                             )
                         }
 
-                        OutlinedButton(
+                        Button(
                             onClick = { showJoinUrlDialog = true },
                             modifier = Modifier
                                 .weight(1f)
-                                .height(48.dp)
+                                .height(46.dp)
                                 .testTag("join_link_button"),
-                            shape = RoundedCornerShape(14.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, IndigoSecondary)
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = CodexDarkSurface,
+                                contentColor = CodexWhite
+                            ),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Link,
                                 contentDescription = "Enlace",
-                                tint = IndigoSecondary,
-                                modifier = Modifier.size(18.dp)
+                                tint = CodexWhite,
+                                modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = "Pegar Enlace",
                                 style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                                color = IndigoSecondary
+                                color = CodexWhite
                             )
                         }
                     }
@@ -229,9 +269,9 @@ fun DashboardScreen(
             // Quick Platform Connectors Carousel
             item {
                 Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = MaterialTheme.colorScheme.surface,
-                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)),
+                    shape = RoundedCornerShape(12.dp),
+                    color = CodexDarkSurface,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
@@ -243,16 +283,16 @@ fun DashboardScreen(
                             Text(
                                 text = "Conexión a Plataformas Externas",
                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = CodexWhite
                             )
                             Surface(
                                 shape = RoundedCornerShape(8.dp),
-                                color = EmeraldSuccess.copy(alpha = 0.15f)
+                                color = CodexBorder
                             ) {
                                 Text(
                                     text = "Detector Activo",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = EmeraldSuccess,
+                                    color = CodexGrayLight,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                 )
                             }
@@ -279,8 +319,9 @@ fun DashboardScreen(
                                         viewModel.joinMeetingFromUrl(url)
                                         onStartRecordingClick()
                                     },
-                                    shape = RoundedCornerShape(12.dp),
-                                    color = MaterialTheme.colorScheme.surfaceVariant,
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = CodexSurfaceVariant,
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorderLight),
                                     modifier = Modifier.testTag("quick_platform_${platformName.lowercase().replace(" ", "_")}")
                                 ) {
                                     Row(
@@ -290,14 +331,14 @@ fun DashboardScreen(
                                         Icon(
                                             imageVector = icon,
                                             contentDescription = platformName,
-                                            tint = CyanPrimary,
+                                            tint = CodexWhite,
                                             modifier = Modifier.size(16.dp)
                                         )
                                         Spacer(modifier = Modifier.width(6.dp))
                                         Text(
                                             text = platformName,
                                             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                                            color = MaterialTheme.colorScheme.onSurface
+                                            color = CodexWhite
                                         )
                                     }
                                 }
@@ -365,12 +406,12 @@ fun DashboardScreen(
                     Text(
                         text = "Reuniones Recientes",
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onBackground
+                        color = CodexWhite
                     )
                     Text(
                         text = "${meetings.size} Guardadas",
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = CodexGrayLight
                     )
                 }
             }
@@ -388,18 +429,20 @@ fun DashboardScreen(
     if (showRoleDialog) {
         AlertDialog(
             onDismissRequest = { showRoleDialog = false },
-            title = { Text("Cambiar Rol de Usuario") },
+            containerColor = CodexDarkSurface,
+            title = { Text("Cambiar Rol de Usuario", color = CodexWhite) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Selecciona un rol para simular permisos de plataforma:", style = MaterialTheme.typography.bodySmall)
+                    Text("Selecciona un rol para simular permisos de plataforma:", style = MaterialTheme.typography.bodySmall, color = CodexGrayLight)
                     UserRole.values().forEach { role ->
                         Surface(
                             onClick = {
                                 UserSessionManager.switchRole(role)
                                 showRoleDialog = false
                             },
-                            shape = RoundedCornerShape(12.dp),
-                            color = if (currentUser.role == role) CyanPrimary.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant,
+                            shape = RoundedCornerShape(10.dp),
+                            color = if (currentUser.role == role) CodexBorder else CodexSurfaceVariant,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorderLight),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Row(
@@ -411,16 +454,16 @@ fun DashboardScreen(
                                     Text(
                                         text = role.label,
                                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                                        color = if (currentUser.role == role) CyanPrimary else MaterialTheme.colorScheme.onSurface
+                                        color = CodexWhite
                                     )
                                     Text(
                                         text = "Nivel de acceso: ${role.level}",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        color = CodexGrayLight
                                     )
                                 }
                                 if (currentUser.role == role) {
-                                    Icon(imageVector = Icons.Default.Check, contentDescription = null, tint = CyanPrimary)
+                                    Icon(imageVector = Icons.Default.Check, contentDescription = null, tint = CodexWhite)
                                 }
                             }
                         }
@@ -429,7 +472,7 @@ fun DashboardScreen(
             },
             confirmButton = {
                 TextButton(onClick = { showRoleDialog = false }) {
-                    Text("Cerrar")
+                    Text("Cerrar", color = CodexWhite)
                 }
             }
         )
@@ -465,9 +508,9 @@ fun MeetingCardItem(
 ) {
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
+        shape = RoundedCornerShape(12.dp),
+        color = CodexDarkSurface,
+        border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder),
         modifier = Modifier
             .fillMaxWidth()
             .testTag("meeting_card_${meeting.id}")
@@ -481,14 +524,14 @@ fun MeetingCardItem(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = IndigoSecondary.copy(alpha = 0.2f)
+                    shape = RoundedCornerShape(6.dp),
+                    color = CodexBorder
                 ) {
                     Text(
                         text = meeting.category,
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                        color = IndigoSecondary,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
+                        color = CodexWhite,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                     )
                 }
                 SentimentBadge(
@@ -497,12 +540,12 @@ fun MeetingCardItem(
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             Text(
                 text = meeting.title,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onSurface
+                color = CodexWhite
             )
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -510,11 +553,11 @@ fun MeetingCardItem(
             Text(
                 text = meeting.executiveSummary ?: "Sin resumen generado",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = CodexGrayLight,
                 maxLines = 2
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -525,14 +568,14 @@ fun MeetingCardItem(
                     Icon(
                         imageVector = Icons.Default.Place,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        tint = CodexGrayLight,
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = meeting.location,
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = CodexGrayLight
                     )
                 }
 
@@ -540,14 +583,14 @@ fun MeetingCardItem(
                     Icon(
                         imageVector = Icons.Default.AccessTime,
                         contentDescription = null,
-                        tint = CyanPrimary,
+                        tint = CodexWhite,
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "${meeting.durationSeconds / 60} min",
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                        color = CyanPrimary
+                        color = CodexWhite
                     )
                 }
             }

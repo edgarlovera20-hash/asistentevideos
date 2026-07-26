@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -63,17 +64,25 @@ fun EnterpriseMemoryScreen(
 
         TabRow(
             selectedTabIndex = activeTab,
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-            contentColor = CyanPrimary
+            containerColor = CodexDarkSurface,
+            contentColor = CodexWhite,
+            indicator = { tabPositions ->
+                if (activeTab < tabPositions.size) {
+                    TabRowDefaults.SecondaryIndicator(
+                        modifier = Modifier.tabIndicatorOffset(tabPositions[activeTab]),
+                        color = CodexWhite
+                    )
+                }
+            }
         ) {
             Tab(selected = activeTab == 0, onClick = { activeTab = 0 }) {
-                Text("Búsqueda global", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelMedium)
+                Text("Búsqueda global", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelMedium, color = if (activeTab == 0) CodexWhite else CodexGrayLight)
             }
             Tab(selected = activeTab == 1, onClick = { activeTab = 1 }) {
-                Text("Integraciones (9)", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelMedium)
+                Text("Integraciones (9)", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelMedium, color = if (activeTab == 1) CodexWhite else CodexGrayLight)
             }
             Tab(selected = activeTab == 2, onClick = { activeTab = 2 }) {
-                Text("Seguridad AES-256", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelMedium)
+                Text("Seguridad AES-256", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelMedium, color = if (activeTab == 2) CodexWhite else CodexGrayLight)
             }
         }
 
@@ -86,11 +95,17 @@ fun EnterpriseMemoryScreen(
                     OutlinedTextField(
                         value = searchQuery,
                         onValueChange = { viewModel.updateSearchQuery(it) },
-                        placeholder = { Text("Buscar clientes (Telmex, Netflix), personas (Edgar, Génesis)...") },
-                        leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null, tint = CyanPrimary) },
+                        placeholder = { Text("Buscar clientes (Telmex, Netflix), personas (Edgar, Génesis)...", color = CodexGrayLight) },
+                        leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null, tint = CodexWhite) },
                         modifier = Modifier.fillMaxWidth().testTag("search_meetings_input"),
-                        shape = RoundedCornerShape(16.dp),
-                        singleLine = true
+                        shape = RoundedCornerShape(12.dp),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = CodexWhite,
+                            unfocusedTextColor = CodexWhite,
+                            focusedBorderColor = CodexWhite,
+                            unfocusedBorderColor = CodexBorder
+                        )
                     )
 
                     // Suggestion Chips
@@ -99,17 +114,17 @@ fun EnterpriseMemoryScreen(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Sugerencias:", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Sugerencias:", style = MaterialTheme.typography.labelSmall, color = CodexGrayLight)
                         sampleQueries.forEach { tag ->
                             Surface(
                                 onClick = { viewModel.updateSearchQuery(tag) },
-                                shape = RoundedCornerShape(12.dp),
-                                color = CyanPrimary.copy(alpha = 0.15f)
+                                shape = RoundedCornerShape(8.dp),
+                                color = CodexBorder
                             ) {
                                 Text(
                                     text = "#$tag",
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                    color = CyanPrimary,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
+                                    color = CodexWhite,
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                 )
                             }
@@ -121,7 +136,7 @@ fun EnterpriseMemoryScreen(
                     Text(
                         text = "Resultados Encontrados (${searchResults.size})",
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onBackground
+                        color = CodexWhite
                     )
 
                     LazyColumn(
@@ -142,9 +157,9 @@ fun EnterpriseMemoryScreen(
                 ) {
                     item {
                         Text(
-                            text = "🔌 Integraciones Empresariales Conectadas",
+                            text = "Integraciones Empresariales Conectadas",
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.onBackground
+                            color = CodexWhite
                         )
                     }
 
@@ -164,8 +179,8 @@ fun EnterpriseMemoryScreen(
                         var isEnabled by remember { mutableStateOf(true) }
                         Surface(
                             shape = RoundedCornerShape(12.dp),
-                            color = MaterialTheme.colorScheme.surface,
-                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
+                            color = CodexDarkSurface,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Row(
@@ -177,17 +192,23 @@ fun EnterpriseMemoryScreen(
                                     Text(
                                         text = title,
                                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                                        color = MaterialTheme.colorScheme.onSurface
+                                        color = CodexWhite
                                     )
                                     Text(
                                         text = desc,
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        color = CodexGrayLight
                                     )
                                 }
                                 Switch(
                                     checked = isEnabled,
-                                    onCheckedChange = { isEnabled = it }
+                                    onCheckedChange = { isEnabled = it },
+                                    colors = SwitchDefaults.colors(
+                                        checkedThumbColor = CodexBlack,
+                                        checkedTrackColor = CodexWhite,
+                                        uncheckedThumbColor = CodexGrayLight,
+                                        uncheckedTrackColor = CodexBorder
+                                    )
                                 )
                             }
                         }
@@ -202,27 +223,27 @@ fun EnterpriseMemoryScreen(
                 ) {
                     item {
                         Surface(
-                            shape = RoundedCornerShape(16.dp),
-                            color = EmeraldSuccess.copy(alpha = 0.1f),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, EmeraldSuccess.copy(alpha = 0.4f)),
+                            shape = RoundedCornerShape(12.dp),
+                            color = CodexDarkSurface,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Row(
                                 modifier = Modifier.padding(16.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(imageVector = Icons.Default.Security, contentDescription = null, tint = EmeraldSuccess, modifier = Modifier.size(32.dp))
+                                Icon(imageVector = Icons.Default.Security, contentDescription = null, tint = CodexWhite, modifier = Modifier.size(28.dp))
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Column {
                                     Text(
                                         text = "Conexión API cifrada (HTTPS/TLS)",
                                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                        color = EmeraldSuccess
+                                        color = CodexWhite
                                     )
                                     Text(
                                         text = "Las llamadas a Gemini viajan por HTTPS. La base de datos local aún no está cifrada en reposo.",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurface
+                                        color = CodexGrayLight
                                     )
                                 }
                             }
@@ -232,22 +253,23 @@ fun EnterpriseMemoryScreen(
                     item {
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "📋 Registro de Auditoría de Accesos (Fase 14)",
+                            text = "Registro de Auditoría de Accesos",
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.onBackground
+                            color = CodexWhite
                         )
                     }
 
                     items(auditLogs) { log ->
                         Surface(
                             shape = RoundedCornerShape(8.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            color = CodexDarkSurface,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
                                 text = log,
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = CodexGrayLight,
                                 modifier = Modifier.padding(10.dp)
                             )
                         }

@@ -2,27 +2,39 @@ package com.example.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Heavenly AI Meeting Palette
-val CyanPrimary = Color(0xFF00E5FF)
-val CyanPrimaryDark = Color(0xFF00B8D4)
-val IndigoSecondary = Color(0xFF6C5CE7)
-val VioletAccent = Color(0xFFA855F7)
+// Codex Minimalist Premium Monochrome Palette
+val CodexBlack = Color(0xFF0F0F0F)       // Fondo principal negro profundo
+val CodexDarkSurface = Color(0xFF1C1C1C)  // Paneles en gris oscuro
+val CodexBorder = Color(0xFF2B2B2B)       // Bordes sutiles y gris medio
+val CodexGrayLight = Color(0xFFA0A0A0)    // Gris claro para texto secundario
+val CodexWhite = Color(0xFFFFFFFF)        // Blanco primordial para textos e iconos principales
 
-val DarkBackground = Color(0xFF0A0E17)
-val DarkSurface = Color(0xFF131C2E)
-val DarkSurfaceVariant = Color(0xFF1E2A45)
-val DarkCardBorder = Color(0xFF2E3D60)
+// Functional dark neutrals
+val CodexSurfaceVariant = Color(0xFF222222)
+val CodexBorderLight = Color(0xFF383838)
 
-val LightBackground = Color(0xFFF8FAFC)
-val LightSurface = Color(0xFFFFFFFF)
-val LightSurfaceVariant = Color(0xFFE2E8F0)
+// Monochromatic legacy mapping for full backward compatibility
+val CyanPrimary = Color(0xFFFFFFFF)
+val CyanPrimaryDark = Color(0xFFA0A0A0)
+val IndigoSecondary = Color(0xFFE0E0E0)
+val VioletAccent = Color(0xFFD0D0D0)
 
-val EmeraldSuccess = Color(0xFF10B981)
-val AmberWarning = Color(0xFFF59E0B)
-val RoseDanger = Color(0xFFEF4444)
+val DarkBackground = CodexBlack
+val DarkSurface = CodexDarkSurface
+val DarkSurfaceVariant = CodexSurfaceVariant
+val DarkCardBorder = CodexBorder
 
-val TextPrimaryDark = Color(0xFFF1F5F9)
-val TextSecondaryDark = Color(0xFF94A3B8)
-val TextPrimaryLight = Color(0xFF0F172A)
-val TextSecondaryLight = Color(0xFF64748B)
+val LightBackground = CodexBlack
+val LightSurface = CodexDarkSurface
+val LightSurfaceVariant = CodexSurfaceVariant
+
+val EmeraldSuccess = Color(0xFFE0E0E0)
+val AmberWarning = Color(0xFFCCCCCC)
+val RoseDanger = Color(0xFFB0B0B0)
+
+val TextPrimaryDark = CodexWhite
+val TextSecondaryDark = CodexGrayLight
+val TextPrimaryLight = CodexWhite
+val TextSecondaryLight = CodexGrayLight
+
 
