@@ -19,6 +19,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.data.ai.AiProvider
 import com.example.data.ai.AiServiceFactory
+import com.example.data.api.ImageProviderSettings
+import com.example.data.api.NvidiaImageService
 import com.example.ui.AiSettingsViewModel
 import com.example.ui.theme.*
 import kotlinx.coroutines.launch
@@ -65,6 +67,81 @@ fun AiSettingsScreen(
                     viewModel = viewModel,
                     onSelect = { viewModel.selectProvider(provider) }
                 )
+            }
+            item {
+                Text(
+                    "Generación de imágenes (pestaña Visual IA)",
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                    color = CodexWhite
+                )
+            }
+            item { ImageProviderCard() }
+        }
+    }
+}
+
+@Composable
+private fun ImageProviderCard() {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val settings = remember { ImageProviderSettings(context) }
+    var apiKey by remember { mutableStateOf(settings.getApiKey()) }
+    var testResult by remember { mutableStateOf<Result<Unit>?>(null) }
+    var isTesting by remember { mutableStateOf(false) }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = CodexDarkSurface),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("NVIDIA NIM (FLUX.1-schnell)", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), color = CodexWhite)
+            OutlinedTextField(
+                value = apiKey,
+                onValueChange = {
+                    apiKey = it
+                    settings.setApiKey(it)
+                },
+                label = { Text("API Key (nvapi-...)") },
+                singleLine = true,
+                visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth()
+            )
+            Button(
+                onClick = {
+                    isTesting = true
+                    testResult = null
+                    scope.launch {
+                        testResult = try {
+                            NvidiaImageService(apiKey).generateImage("a small teal circle icon on white background")
+                            Result.success(Unit)
+                        } catch (e: Exception) {
+                            Result.failure(e)
+                        }
+                        isTesting = false
+                    }
+                },
+                enabled = !isTesting && apiKey.isNotBlank(),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(if (isTesting) "Generando de prueba… puede tardar hasta 2 minutos" else "Confirmar y probar conexión")
+            }
+            testResult?.let { result ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (result.isSuccess) {
+                        Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF4CAF50), modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Conexión exitosa", style = MaterialTheme.typography.labelSmall, color = Color(0xFF4CAF50))
+                    } else {
+                        Icon(Icons.Default.Error, contentDescription = null, tint = Color(0xFFE57373), modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            result.exceptionOrNull()?.message ?: "No se pudo conectar",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color(0xFFE57373)
+                        )
+                    }
+                }
             }
         }
     }

@@ -29,6 +29,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.data.db.VisualAssetEntity
 import com.example.data.user.UserSessionManager
 import com.example.ui.MeetingViewModel
@@ -45,6 +46,8 @@ fun VisualIntelligenceScreen(
     val meetings by viewModel.meetings.collectAsState()
     val actionFeedback by viewModel.actionFeedback.collectAsState()
     val currentUser by UserSessionManager.currentUser.collectAsState()
+    val isGeneratingImage by viewModel.isGeneratingImage.collectAsState()
+    val activeMeeting by viewModel.activeMeeting.collectAsState()
 
     var activeTab by remember { mutableStateOf(0) } // 0: Centro Visual & Activos, 1: 30 Skills Engine, 2: Model Router & MCP, 3: 11 Agentes & Entregables
     var selectedAssetForPreview by remember { mutableStateOf<VisualAssetEntity?>(null) }
@@ -154,6 +157,14 @@ fun VisualIntelligenceScreen(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
+                    item {
+                        RealImageGenerationCard(
+                            defaultPrompt = activeMeeting?.executiveSummary?.take(200) ?: "",
+                            isGenerating = isGeneratingImage,
+                            onGenerate = { prompt -> viewModel.generateRealVisualImage(prompt) }
+                        )
+                    }
+
                     item {
                         Text(
                             text = "📊 Indicadores del Visual Intelligence Center",
@@ -562,7 +573,15 @@ fun VisualIntelligenceScreen(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            VisualAssetCanvasRenderer(asset = asset)
+                            if (asset.imageFilePath != null) {
+                                AsyncImage(
+                                    model = asset.imageFilePath,
+                                    contentDescription = asset.title,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            } else {
+                                VisualAssetCanvasRenderer(asset = asset)
+                            }
                         }
                     }
 
@@ -583,6 +602,52 @@ fun VisualIntelligenceScreen(
                 }
             }
         )
+    }
+}
+
+@Composable
+fun RealImageGenerationCard(
+    defaultPrompt: String,
+    isGenerating: Boolean,
+    onGenerate: (String) -> Unit
+) {
+    var prompt by remember(defaultPrompt) { mutableStateOf(defaultPrompt) }
+
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = CodexDarkSurface,
+        border = androidx.compose.foundation.BorderStroke(1.dp, CyanPrimary.copy(alpha = 0.4f)),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(imageVector = Icons.Default.Image, contentDescription = null, tint = CyanPrimary)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Generar imagen real (NVIDIA NIM)", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold), color = CodexWhite)
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedTextField(
+                value = prompt,
+                onValueChange = { prompt = it },
+                label = { Text("Describe la imagen") },
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 2,
+                enabled = !isGenerating
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(
+                onClick = { onGenerate(prompt) },
+                enabled = !isGenerating && prompt.isNotBlank(),
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = CyanPrimary, contentColor = Color.Black)
+            ) {
+                if (isGenerating) {
+                    Text("Generando… puede tardar hasta 2 minutos")
+                } else {
+                    Text("Generar imagen")
+                }
+            }
+        }
     }
 }
 
@@ -658,6 +723,18 @@ fun VisualAssetCard(
                 color = CodexGrayLight,
                 maxLines = 2
             )
+
+            if (asset.imageFilePath != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                AsyncImage(
+                    model = asset.imageFilePath,
+                    contentDescription = asset.title,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(140.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                )
+            }
 
             Spacer(modifier = Modifier.height(10.dp))
 
