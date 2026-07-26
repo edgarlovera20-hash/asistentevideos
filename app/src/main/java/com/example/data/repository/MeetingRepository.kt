@@ -1,5 +1,7 @@
 package com.example.data.repository
 
+import com.example.data.ai.AiTextService
+import com.example.data.ai.GeminiTextService
 import com.example.data.api.AudioTranscriptionResult
 import com.example.data.api.GeminiAudioTranscriptionService
 import com.example.data.api.GeminiMeetingService
@@ -12,6 +14,9 @@ import java.io.File
 
 class MeetingRepository(
     private val dao: MeetingDao,
+    private val aiService: AiTextService = GeminiTextService(),
+    // Visual asset templates and audio transcription aren't part of AiTextService (see its
+    // kdoc) — they stay on the concrete Gemini services regardless of the selected text provider.
     private val geminiService: GeminiMeetingService = GeminiMeetingService(),
     private val transcriptionService: GeminiAudioTranscriptionService = GeminiAudioTranscriptionService()
 ) {
@@ -137,7 +142,7 @@ class MeetingRepository(
         val fullTranscript = segments.joinToString("\n") { "${it.speakerTag} (${it.speakerName}): ${it.text}" }
         val participantsList = dao.getParticipants(meetingId).firstOrNull()?.joinToString(", ") { it.name } ?: "Participantes generales"
 
-        val analysis = geminiService.analyzeMeetingFull(fullTranscript, participantsList, meeting.title)
+        val analysis = aiService.analyzeMeeting(fullTranscript, participantsList, meeting.title)
 
         val updatedMeeting = meeting.copy(
             status = "COMPLETADO",
@@ -207,7 +212,7 @@ class MeetingRepository(
         val previousMessages = dao.getChatMessages(meetingId).firstOrNull() ?: emptyList()
         val chatHistory = previousMessages.takeLast(10).map { Pair(it.sender, it.messageText) }
 
-        val aiResponse = geminiService.chatWithMeeting(context, userText, chatHistory)
+        val aiResponse = aiService.chat(context, userText, chatHistory)
 
         dao.insertChatMessage(
             ChatMessageEntity(meetingId = meetingId, sender = "Gemini", messageText = aiResponse)
@@ -222,7 +227,7 @@ class MeetingRepository(
     suspend fun translateMeeting(meetingId: Long, language: String): String = withContext(Dispatchers.IO) {
         val meeting = dao.getMeetingByIdSync(meetingId) ?: return@withContext ""
         val summary = meeting.executiveSummary ?: "Sin resumen"
-        val translated = geminiService.translateText(summary, language)
+        val translated = aiService.translate(summary, language)
         dao.updateMeeting(meeting.copy(translatedLanguage = language, executiveSummary = translated))
         translated
     }
@@ -231,7 +236,7 @@ class MeetingRepository(
         val meeting = dao.getMeetingByIdSync(meetingId) ?: return@withContext ""
         val segments = dao.getTranscriptSegmentsSync(meetingId)
         val transcript = segments.joinToString("\n") { "${it.speakerTag} (${it.speakerName}): ${it.text}" }
-        geminiService.generateExportDocument(meeting.title, transcript, meeting.executiveSummary ?: "", formatType)
+        aiService.generateDocument(meeting.title, transcript, meeting.executiveSummary ?: "", formatType)
     }
 
     suspend fun createVisualAsset(

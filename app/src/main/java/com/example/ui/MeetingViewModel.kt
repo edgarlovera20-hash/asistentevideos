@@ -3,6 +3,7 @@ package com.example.ui
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.data.ai.AiServiceFactory
 import com.example.data.api.GoogleDriveService
 import com.example.data.audio.AudioRecordingForegroundService
 import com.example.data.audio.RealtimeAudioRecorder
@@ -17,7 +18,7 @@ import kotlinx.coroutines.launch
 class MeetingViewModel(application: Application) : AndroidViewModel(application) {
 
     private val db = AppDatabase.getDatabase(application)
-    private val repository = MeetingRepository(db.meetingDao())
+    private val repository = MeetingRepository(db.meetingDao(), AiServiceFactory.create(application))
     val audioRecorder = RealtimeAudioRecorder(application)
     val authManager = GoogleAuthManager(application)
     private val driveService = GoogleDriveService()
