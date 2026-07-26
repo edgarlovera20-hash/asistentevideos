@@ -95,10 +95,13 @@ object RetrofitClient {
     }
 }
 
-class GeminiMeetingService {
+// [apiKeyOverride] lets a runtime-configured key (Ajustes IA) take priority over the one
+// baked into the build via .env — without it, changing the key in the app's Settings screen
+// would silently do nothing for Gemini specifically, unlike every other provider.
+class GeminiMeetingService(private val apiKeyOverride: String? = null) {
 
     private val apiKey: String
-        get() = BuildConfig.GEMINI_API_KEY
+        get() = apiKeyOverride?.takeIf { it.isNotBlank() } ?: BuildConfig.GEMINI_API_KEY
 
     val hasValidApiKey: Boolean
         get() = apiKey.isNotBlank() && apiKey != "MY_GEMINI_API_KEY"
