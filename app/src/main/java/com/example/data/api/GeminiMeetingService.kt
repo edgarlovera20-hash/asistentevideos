@@ -5,12 +5,22 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
+import retrofit2.HttpException
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.http.Body
 import retrofit2.http.POST
 import retrofit2.http.Query
 import java.util.concurrent.TimeUnit
+
+/** Turns a network/HTTP exception into a short human-readable detail (HTTP code + Google's own error message, if any) instead of a generic "algo salió mal". */
+fun describeError(e: Exception): String = when (e) {
+    is HttpException -> {
+        val body = e.response()?.errorBody()?.string()?.take(300)
+        "HTTP ${e.code()}${if (!body.isNullOrBlank()) " — $body" else ""}"
+    }
+    else -> e.message ?: e.javaClass.simpleName
+}
 
 
 data class GeminiRequest(
@@ -205,7 +215,7 @@ class GeminiMeetingService(private val apiKeyOverride: String? = null) {
                 ?: "No se obtuvo respuesta de la IA. Por favor intenta nuevamente."
         } catch (e: Exception) {
             e.printStackTrace()
-            generateMockChatResponse(userQuestion)
+            generateMockChatResponse(userQuestion, describeError(e))
         }
     }
 
@@ -361,8 +371,9 @@ class GeminiMeetingService(private val apiKeyOverride: String? = null) {
         )
     }
 
-    private fun generateMockChatResponse(question: String): String {
-        return "No se pudo conectar con Gemini para responder tu pregunta (sin conexión o sin API key configurada). Revisa tu conexión o la configuración de la API key e intenta de nuevo."
+    private fun generateMockChatResponse(question: String, errorDetail: String? = null): String {
+        val detail = errorDetail?.let { " Detalle: $it" } ?: ""
+        return "No se pudo conectar con Gemini para responder tu pregunta (sin conexión o sin API key configurada).$detail Revisa tu conexión o la configuración de la API key e intenta de nuevo."
     }
 
     private fun generateFallbackDocumentFormat(title: String, format: String): String {

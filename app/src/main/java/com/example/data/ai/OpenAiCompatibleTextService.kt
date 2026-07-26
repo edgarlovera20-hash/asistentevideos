@@ -61,7 +61,7 @@ class OpenAiCompatibleTextService(
         try {
             retryIO { complete(buildChatPrompt(meetingContext, userQuestion, chatHistory)) }
         } catch (e: Exception) {
-            fallbackChatResponse(providerLabel)
+            fallbackChatResponse(providerLabel, com.example.data.api.describeError(e))
         }
 
     override suspend fun generateDocument(meetingTitle: String, transcript: String, analysis: String, formatType: String): String =

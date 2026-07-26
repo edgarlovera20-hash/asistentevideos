@@ -154,8 +154,10 @@ fun fallbackAnalysis(providerLabel: String, title: String): MeetingAnalysisResul
     conclusion = "Reintenta el análisis cuando haya conexión y la configuración de $providerLabel sea válida."
 )
 
-fun fallbackChatResponse(providerLabel: String): String =
-    "No se pudo conectar con $providerLabel para responder tu pregunta (sin conexión o configuración inválida). Revisa tu conexión o la configuración del proveedor de IA e intenta de nuevo."
+fun fallbackChatResponse(providerLabel: String, errorDetail: String? = null): String {
+    val detail = errorDetail?.let { " Detalle: $it" } ?: ""
+    return "No se pudo conectar con $providerLabel para responder tu pregunta (sin conexión o configuración inválida).$detail Revisa tu conexión o la configuración del proveedor de IA e intenta de nuevo."
+}
 
 fun fallbackDocument(providerLabel: String, title: String): String = """
     ----------------------------------------------------

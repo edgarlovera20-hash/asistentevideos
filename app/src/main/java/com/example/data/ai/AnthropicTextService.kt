@@ -56,7 +56,7 @@ class AnthropicTextService(
         try {
             retryIO { complete(buildChatPrompt(meetingContext, userQuestion, chatHistory)) }
         } catch (e: Exception) {
-            fallbackChatResponse("Anthropic Claude")
+            fallbackChatResponse("Anthropic Claude", com.example.data.api.describeError(e))
         }
 
     override suspend fun generateDocument(meetingTitle: String, transcript: String, analysis: String, formatType: String): String =
