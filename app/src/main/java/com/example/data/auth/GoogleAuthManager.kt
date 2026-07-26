@@ -23,6 +23,9 @@ class GoogleAuthManager(context: Context) {
 
     companion object {
         const val CALENDAR_READONLY_SCOPE = "https://www.googleapis.com/auth/calendar.readonly"
+        // drive.file = least privilege: only touches files this app itself creates, not the
+        // user's whole Drive.
+        const val DRIVE_FILE_SCOPE = "https://www.googleapis.com/auth/drive.file"
 
         // Replace with the "Web" OAuth Client ID created in Google Cloud Console (see README).
         const val WEB_CLIENT_ID = "235093422193-f7drutnpnof7fqm28qe029fii0r4kjdn.apps.googleusercontent.com"
@@ -42,7 +45,7 @@ class GoogleAuthManager(context: Context) {
 
     fun buildAuthorizationRequest(): AuthorizationRequest =
         AuthorizationRequest.builder()
-            .setRequestedScopes(listOf(Scope(CALENDAR_READONLY_SCOPE)))
+            .setRequestedScopes(listOf(Scope(CALENDAR_READONLY_SCOPE), Scope(DRIVE_FILE_SCOPE)))
             // requestOfflineAccess is what actually uses WEB_CLIENT_ID — without it the
             // constant just sat there unused. This also gets us a server auth code path
             // instead of relying purely on the ~50min expiry guess in saveResult().

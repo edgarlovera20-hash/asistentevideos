@@ -39,12 +39,10 @@ fun EnterpriseMemoryScreen(
     var activeTab by remember { mutableStateOf(0) } // 0: Memoria & Búsqueda, 1: Integraciones, 2: Seguridad & Logs
 
     val sampleQueries = listOf(
-        "Telmex",
-        "Netflix",
-        "Génesis",
-        "Edgar",
         "Contrato",
-        "Ventas"
+        "Ventas",
+        "Presupuesto",
+        "Seguimiento"
     )
 
     Column(
@@ -95,7 +93,7 @@ fun EnterpriseMemoryScreen(
                     OutlinedTextField(
                         value = searchQuery,
                         onValueChange = { viewModel.updateSearchQuery(it) },
-                        placeholder = { Text("Buscar clientes (Telmex, Netflix), personas (Edgar, Génesis)...", color = CodexGrayLight) },
+                        placeholder = { Text("Buscar por cliente, persona, tema...", color = CodexGrayLight) },
                         leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null, tint = CodexWhite) },
                         modifier = Modifier.fillMaxWidth().testTag("search_meetings_input"),
                         shape = RoundedCornerShape(12.dp),

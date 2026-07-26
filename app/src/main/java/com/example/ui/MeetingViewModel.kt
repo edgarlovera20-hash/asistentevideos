@@ -3,8 +3,11 @@ package com.example.ui
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.data.ai.AiServiceFactory
+import com.example.data.api.GoogleDriveService
 import com.example.data.audio.AudioRecordingForegroundService
 import com.example.data.audio.RealtimeAudioRecorder
+import com.example.data.auth.GoogleAuthManager
 import com.example.data.db.*
 import com.example.data.repository.MeetingRepository
 import kotlinx.coroutines.Job
@@ -15,8 +18,10 @@ import kotlinx.coroutines.launch
 class MeetingViewModel(application: Application) : AndroidViewModel(application) {
 
     private val db = AppDatabase.getDatabase(application)
-    private val repository = MeetingRepository(db.meetingDao())
+    private val repository = MeetingRepository(db.meetingDao(), AiServiceFactory.create(application))
     val audioRecorder = RealtimeAudioRecorder(application)
+    val authManager = GoogleAuthManager(application)
+    private val driveService = GoogleDriveService()
 
     val meetings: StateFlow<List<MeetingEntity>> = repository.allMeetings
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -99,7 +104,7 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
     private val _audioAmplitudes = MutableStateFlow<List<Float>>(emptyList())
     val audioAmplitudes: StateFlow<List<Float>> = _audioAmplitudes.asStateFlow()
 
-    private val _activeSpeaker = MutableStateFlow("Persona 1 (Edgar Gomez)")
+    private val _activeSpeaker = MutableStateFlow("Persona 1")
     val activeSpeaker: StateFlow<String> = _activeSpeaker.asStateFlow()
 
     private val _isAnalyzingAI = MutableStateFlow(false)
@@ -122,12 +127,6 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
 
     private fun logAudit(message: String) {
         viewModelScope.launch { repository.addAuditLog(message) }
-    }
-
-    init {
-        viewModelScope.launch {
-            repository.seedInitialDataIfEmpty()
-        }
     }
 
     fun selectMeeting(id: Long) {
@@ -166,58 +165,58 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
                 platformName = "Zoom Video Communications",
                 category = "Zoom Call",
                 defaultTitle = "Conferencia Zoom (${url.takeLast(9)})",
-                defaultParticipants = listOf("Anfitrión Zoom", "Edgar Gomez", "Cliente Externo")
+                defaultParticipants = listOf("Anfitrión Zoom", "Cliente Externo")
             )
             lower.contains("meet.google.com") -> PlatformInfo(
                 platformName = "Google Meet",
                 category = "Google Meet",
                 defaultTitle = "Sesión Google Meet (${if (url.contains("/")) url.substringAfterLast("/") else url})",
-                defaultParticipants = listOf("Edgar Gomez", "Génesis Rivas", "Equipo Google Workspace")
+                defaultParticipants = listOf("Equipo Google Workspace")
             )
             lower.contains("telmex.com") -> PlatformInfo(
                 platformName = "Videoconferencia Telmex",
                 category = "Telmex Conecta",
                 defaultTitle = "Videoconferencia Telmex Empresarial",
-                defaultParticipants = listOf("Edgar Gomez", "Ejecutivo Telmex", "Soporte Técnico")
+                defaultParticipants = listOf("Ejecutivo Telmex", "Soporte Técnico")
             )
             lower.contains("wa.me") || lower.contains("whatsapp") -> PlatformInfo(
                 platformName = "WhatsApp Audio Call",
                 category = "Llamada WhatsApp",
                 defaultTitle = "Llamada de WhatsApp (${url.takeLast(10)})",
-                defaultParticipants = listOf("Edgar Gomez", "Contacto WhatsApp")
+                defaultParticipants = listOf("Contacto WhatsApp")
             )
             lower.contains("teams.microsoft.com") -> PlatformInfo(
                 platformName = "Microsoft Teams",
                 category = "MS Teams",
                 defaultTitle = "Reunión Microsoft Teams",
-                defaultParticipants = listOf("Edgar Gomez", "Gerente de Proyecto", "Analista IT")
+                defaultParticipants = listOf("Gerente de Proyecto", "Analista IT")
             )
             lower.contains("messenger.com") -> PlatformInfo(
                 platformName = "Messenger Video Call",
                 category = "Messenger",
                 defaultTitle = "Llamada de Messenger",
-                defaultParticipants = listOf("Edgar Gomez", "Contacto Messenger")
+                defaultParticipants = listOf("Contacto Messenger")
             )
             lower.startsWith("tel:") || lower.contains("llamada") || lower.contains("phone") -> PlatformInfo(
                 platformName = "Red Móvil / Llamada Telefónica",
                 category = "Llamada Móvil",
                 defaultTitle = "Captura de Llamada Móvil (${url.replace("tel:", "")})",
-                defaultParticipants = listOf("Edgar Gomez", "Llamante Móvil")
+                defaultParticipants = listOf("Llamante Móvil")
             )
             else -> PlatformInfo(
                 platformName = "Plataforma Externa",
                 category = "Enlace Web",
                 defaultTitle = "Reunión Conectada por Enlace ($url)",
-                defaultParticipants = listOf("Edgar Gomez", "Participantes Externos")
+                defaultParticipants = listOf("Participantes Externos")
             )
         }
     }
 
     fun startRecording(
-        title: String = "Reunión de Estrategia Operativa",
-        location: String = "Sala de Juntas",
+        title: String = "Reunión sin título",
+        location: String = "Sin ubicación",
         category: String = "General",
-        participants: List<String> = listOf("Edgar Gomez", "Juan Perez", "Génesis Rivas")
+        participants: List<String> = emptyList()
     ) {
         viewModelScope.launch {
             val id = repository.createMeeting(title, location, category, participants)
@@ -393,6 +392,28 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
             } catch (e: Exception) {
                 _errorMessage.value = "No se pudo eliminar la reunión: ${e.message ?: "error desconocido"}"
             }
+        }
+    }
+
+    /** Saves a text file with the given content to the user's Google Drive. Requires the
+     * Google account to already be connected (from the "Avisos" screen) — this doesn't
+     * re-run the consent flow here to avoid duplicating that UI in a second place. */
+    fun saveToGoogleDrive(title: String, content: String) {
+        viewModelScope.launch {
+            val token = authManager.getAccessToken()
+            if (token == null) {
+                _errorMessage.value = "Conecta tu cuenta de Google primero desde la pestaña Avisos."
+                return@launch
+            }
+            try {
+                driveService.createTextFile(token, title, content)
+                _actionFeedback.value = "Guardado en Google Drive."
+                repository.addAuditLog("Reunión \"$title\" guardada en Google Drive.")
+            } catch (e: Exception) {
+                _errorMessage.value = "No se pudo guardar en Drive: ${e.message ?: "error desconocido"}"
+            }
+            delay(2000)
+            _actionFeedback.value = null
         }
     }
 

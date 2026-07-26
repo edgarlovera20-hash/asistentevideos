@@ -439,7 +439,7 @@ fun VisualIntelligenceScreen(
                         val enterpriseAgents = listOf(
                             "1. Meeting Agent" to "Transcripción, resumen y acta de reunión",
                             "2. HR Agent" to "Evaluación de clima y requisiciones de personal",
-                            "3. Sales Agent" to "Seguimiento de clientes, ofertas y Telmex pipeline",
+                            "3. Sales Agent" to "Seguimiento de clientes, ofertas y pipeline de ventas",
                             "4. Marketing Agent" to "Estrategias de contenido y campañas corporativas",
                             "5. Finance Agent" to "Análisis de presupuestos, ROI y costos",
                             "6. Legal Agent" to "Revisión de contratos y cláusulas normativas",

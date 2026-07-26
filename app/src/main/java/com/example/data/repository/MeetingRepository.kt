@@ -1,5 +1,7 @@
 package com.example.data.repository
 
+import com.example.data.ai.AiTextService
+import com.example.data.ai.GeminiTextService
 import com.example.data.api.AudioTranscriptionResult
 import com.example.data.api.GeminiAudioTranscriptionService
 import com.example.data.api.GeminiMeetingService
@@ -12,6 +14,9 @@ import java.io.File
 
 class MeetingRepository(
     private val dao: MeetingDao,
+    private val aiService: AiTextService = GeminiTextService(),
+    // Visual asset templates and audio transcription aren't part of AiTextService (see its
+    // kdoc) — they stay on the concrete Gemini services regardless of the selected text provider.
     private val geminiService: GeminiMeetingService = GeminiMeetingService(),
     private val transcriptionService: GeminiAudioTranscriptionService = GeminiAudioTranscriptionService()
 ) {
@@ -137,7 +142,7 @@ class MeetingRepository(
         val fullTranscript = segments.joinToString("\n") { "${it.speakerTag} (${it.speakerName}): ${it.text}" }
         val participantsList = dao.getParticipants(meetingId).firstOrNull()?.joinToString(", ") { it.name } ?: "Participantes generales"
 
-        val analysis = geminiService.analyzeMeetingFull(fullTranscript, participantsList, meeting.title)
+        val analysis = aiService.analyzeMeeting(fullTranscript, participantsList, meeting.title)
 
         val updatedMeeting = meeting.copy(
             status = "COMPLETADO",
@@ -207,7 +212,7 @@ class MeetingRepository(
         val previousMessages = dao.getChatMessages(meetingId).firstOrNull() ?: emptyList()
         val chatHistory = previousMessages.takeLast(10).map { Pair(it.sender, it.messageText) }
 
-        val aiResponse = geminiService.chatWithMeeting(context, userText, chatHistory)
+        val aiResponse = aiService.chat(context, userText, chatHistory)
 
         dao.insertChatMessage(
             ChatMessageEntity(meetingId = meetingId, sender = "Gemini", messageText = aiResponse)
@@ -222,7 +227,7 @@ class MeetingRepository(
     suspend fun translateMeeting(meetingId: Long, language: String): String = withContext(Dispatchers.IO) {
         val meeting = dao.getMeetingByIdSync(meetingId) ?: return@withContext ""
         val summary = meeting.executiveSummary ?: "Sin resumen"
-        val translated = geminiService.translateText(summary, language)
+        val translated = aiService.translate(summary, language)
         dao.updateMeeting(meeting.copy(translatedLanguage = language, executiveSummary = translated))
         translated
     }
@@ -231,148 +236,7 @@ class MeetingRepository(
         val meeting = dao.getMeetingByIdSync(meetingId) ?: return@withContext ""
         val segments = dao.getTranscriptSegmentsSync(meetingId)
         val transcript = segments.joinToString("\n") { "${it.speakerTag} (${it.speakerName}): ${it.text}" }
-        geminiService.generateExportDocument(meeting.title, transcript, meeting.executiveSummary ?: "", formatType)
-    }
-
-    suspend fun seedInitialDataIfEmpty() = withContext(Dispatchers.IO) {
-        val existing = dao.getAllMeetings().firstOrNull()
-        if (existing.isNullOrEmpty()) {
-            // Seed Meeting 1: Estrategia Comercial Telmex & Ventas
-            val m1Id = dao.insertMeeting(
-                MeetingEntity(
-                    title = "Estrategia Comercial Telmex & Ventas",
-                    dateTimestamp = System.currentTimeMillis() - 86400000 * 2, // 2 days ago
-                    durationSeconds = 2450,
-                    location = "Sala Executive & Google Meet",
-                    category = "Ventas",
-                    status = "COMPLETADO",
-                    executiveSummary = "En esta reunión clave con la dirección de ventas, Edgar Gómez expuso los avances en la renovación del contrato estratégico con Telmex. Génesis propuso integrar el módulo de selección de personal y automatizaciones. Se acordaron metas de cierre mensual y revisiones legales.",
-                    conclusions = "Acuerdo total sobre los términos de propuesta y envío de documentación formal este viernes.",
-                    sentimentLabel = "Positivo",
-                    sentimentScore = 0.92f,
-                    emotionalLevel = "Alta Energía",
-                    translatedLanguage = "Español"
-                )
-            )
-
-            dao.insertParticipants(
-                listOf(
-                    ParticipantEntity(meetingId = m1Id, name = "Juan Perez", role = "Director Comercial", email = "juan@heavenly.ai"),
-                    ParticipantEntity(meetingId = m1Id, name = "Edgar Gomez", role = "Supervisor Técnico", email = "edgar@heavenly.ai"),
-                    ParticipantEntity(meetingId = m1Id, name = "Génesis Rivas", role = "Lead RRHH & Operaciones", email = "genesis@heavenly.ai")
-                )
-            )
-
-            dao.insertTranscriptSegments(
-                listOf(
-                    TranscriptSegmentEntity(meetingId = m1Id, speakerName = "Juan Perez", speakerTag = "Persona 1", text = "Buenos días equipo. Iniciamos la revisión sobre el contrato Telmex y metas de ventas.", timestampMs = 0),
-                    TranscriptSegmentEntity(meetingId = m1Id, speakerName = "Edgar Gomez", speakerTag = "Persona 2", text = "Perfecto Juan. Llegué 18 minutos después debido al tráfico, pero ya revisé la propuesta técnica.", timestampMs = 15000),
-                    TranscriptSegmentEntity(meetingId = m1Id, speakerName = "Edgar Gomez", speakerTag = "Persona 2", text = "Los números con Telmex muestran un incremento proyectado del 24% en ingresos si cerramos la fase 2 este mes.", timestampMs = 35000),
-                    TranscriptSegmentEntity(meetingId = m1Id, speakerName = "Génesis Rivas", speakerTag = "Persona 3", text = "Sugeriría incorporar la automatización de reclutamiento para garantizar el personal necesario en el servicio.", timestampMs = 55000),
-                    TranscriptSegmentEntity(meetingId = m1Id, speakerName = "Juan Perez", speakerTag = "Persona 1", text = "Excelente propuesta Génesis. Queda aprobado. Edgar, por favor envía la minuta ajustada el Lunes.", timestampMs = 75000)
-                )
-            )
-
-            dao.insertAgreements(
-                listOf(
-                    AgreementEntity(meetingId = m1Id, agreementText = "Aprobar la propuesta comercial ajustada para Telmex con +24% de volumen.", category = "Ventas"),
-                    AgreementEntity(meetingId = m1Id, agreementText = "Integrar el módulo de reclutamiento de Heavenly Dreams en la arquitectura.", category = "Operaciones")
-                )
-            )
-
-            dao.insertTasks(
-                listOf(
-                    ActionTaskEntity(meetingId = m1Id, title = "Enviar versión final de propuesta a cliente Telmex", assignee = "Juan Perez", dueDate = "Este Viernes", priority = "Alta", isCompleted = false),
-                    ActionTaskEntity(meetingId = m1Id, title = "Revisión de términos legales y anexos técnicos", assignee = "Edgar Gomez", dueDate = "Próximo Lunes", priority = "Alta", isCompleted = false),
-                    ActionTaskEntity(meetingId = m1Id, title = "Elaborar expediente de personal y requisición de RRHH", assignee = "Génesis Rivas", dueDate = "En 4 días", priority = "Media", isCompleted = true)
-                )
-            )
-
-            dao.insertSummary(
-                MeetingSummaryEntity(
-                    meetingId = m1Id,
-                    executiveBriefing = "En esta reunión clave con la dirección de ventas, Edgar Gómez expuso los avances en la renovación del contrato estratégico con Telmex. Génesis propuso integrar el módulo de selección de personal y automatizaciones.",
-                    keyTakeaways = "Proyección de +24% ingresos con Telmex | Integración de reclutamiento de personal en Heavenly Dreams | Entrega de propuesta final este viernes",
-                    decisionLog = "Acuerdo total sobre los términos de propuesta y envío de documentación formal este viernes.",
-                    riskRegister = "Riesgo de retraso en firma de anexos legales minimizado al asignar a Edgar Gómez.",
-                    nextSteps = "Enviar versión final a Telmex; Revisión de términos legales; Elaborar expediente de RRHH"
-                )
-            )
-
-            dao.insertChatMessage(
-                ChatMessageEntity(meetingId = m1Id, sender = "Gemini", messageText = "Hola. Soy Heavenly AI. He analizado la reunión con Edgar y Génesis. ¿En qué puedo ayudarte?")
-            )
-
-            // Seed Meeting 2: Planificación de Infraestructura & Cloud
-            val m2Id = dao.insertMeeting(
-                MeetingEntity(
-                    title = "Planificación de Infraestructura & Cloud",
-                    dateTimestamp = System.currentTimeMillis() - 86400000 * 5, // 5 days ago
-                    durationSeconds = 1800,
-                    location = "Microsoft Teams",
-                    category = "Ingeniería",
-                    status = "COMPLETADO",
-                    executiveSummary = "Revisión del consumo de infraestructura Cloud y almacenamiento vectorial para la memoria empresarial corporativa. Se afinaron parámetros de seguridad de acceso.",
-                    conclusions = "Mantenimiento programado sin interrupción del servicio.",
-                    sentimentLabel = "Optimista",
-                    sentimentScore = 0.85f,
-                    emotionalLevel = "Calmado",
-                    translatedLanguage = "Español"
-                )
-            )
-
-            dao.insertParticipants(
-                listOf(
-                    ParticipantEntity(meetingId = m2Id, name = "Edgar Gomez", role = "Supervisor", email = "edgar@heavenly.ai"),
-                    ParticipantEntity(meetingId = m2Id, name = "Carlos Ruiz", role = "DevOps Lead", email = "carlos@heavenly.ai")
-                )
-            )
-
-            dao.insertTranscriptSegments(
-                listOf(
-                    TranscriptSegmentEntity(meetingId = m2Id, speakerName = "Edgar Gomez", speakerTag = "Persona 1", text = "Hola Carlos, revisemos la latencia de las consultas semánticas en la memoria empresarial.", timestampMs = 0),
-                    TranscriptSegmentEntity(meetingId = m2Id, speakerName = "Carlos Ruiz", speakerTag = "Persona 2", text = "Todo en orden Edgar. La API de Gemini responde en menos de 400 milisegundos.", timestampMs = 20000)
-                )
-            )
-
-            dao.insertAgreements(
-                listOf(
-                    AgreementEntity(meetingId = m2Id, agreementText = "Mantener la política de control de acceso en repositorios de audio.", category = "Seguridad")
-                )
-            )
-
-            dao.insertTasks(
-                listOf(
-                    ActionTaskEntity(meetingId = m2Id, title = "Auditoría de logs de acceso mensual", assignee = "Carlos Ruiz", dueDate = "Fin de mes", priority = "Baja", isCompleted = true)
-                )
-            )
-
-            dao.insertSummary(
-                MeetingSummaryEntity(
-                    meetingId = m2Id,
-                    executiveBriefing = "Revisión del consumo de infraestructura Cloud y almacenamiento vectorial para la memoria empresarial corporativa.",
-                    keyTakeaways = "Respuesta de la API en <400ms | Mantenimiento programado de infraestructura | Auditoría de accesos al día",
-                    decisionLog = "Mantenimiento programado sin interrupción del servicio.",
-                    riskRegister = "Ningún riesgo crítico detectado en la auditoría de latencia.",
-                    nextSteps = "Auditoría mensual de logs de acceso por Carlos Ruiz."
-                )
-            )
-
-            // Seed initial Visual Assets for Meeting 1 & 2
-            val seededAssets1 = geminiService.generateVisualAssetsForMeeting(
-                meetingId = m1Id,
-                meetingTitle = "Estrategia Comercial Telmex & Ventas",
-                transcript = "Edgar Gomez: Los números con Telmex muestran un incremento del 24%...",
-                summary = "Reunión de estrategia comercial..."
-            )
-            val seededAssets2 = geminiService.generateVisualAssetsForMeeting(
-                meetingId = m2Id,
-                meetingTitle = "Planificación de Infraestructura & Cloud",
-                transcript = "Edgar Gomez: Latencia de consultas semánticas...",
-                summary = "Infraestructura Cloud..."
-            )
-            dao.insertVisualAssets(seededAssets1 + seededAssets2)
-        }
+        aiService.generateDocument(meeting.title, transcript, meeting.executiveSummary ?: "", formatType)
     }
 
     suspend fun createVisualAsset(
