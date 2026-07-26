@@ -174,6 +174,14 @@ fun MainScreen(
                     colors = navColors,
                     modifier = Modifier.testTag("nav_item_memory")
                 )
+                NavigationBarItem(
+                    selected = selectedTab == 6,
+                    onClick = { selectedTab = 6 },
+                    icon = { Icon(Icons.Default.Notifications, contentDescription = "Recordatorios") },
+                    label = { Text("Avisos") },
+                    colors = navColors,
+                    modifier = Modifier.testTag("nav_item_reminders")
+                )
             }
         }
     ) { innerPadding ->
@@ -217,6 +225,7 @@ fun MainScreen(
                         selectedTab = 2
                     }
                 )
+                6 -> RemindersScreen()
             }
         }
     }

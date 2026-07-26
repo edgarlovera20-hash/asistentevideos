@@ -145,6 +145,26 @@ interface MeetingDao {
     @Query("DELETE FROM visual_assets WHERE id = :id")
     suspend fun deleteVisualAsset(id: Long)
 
+    // Reminders (Calendar + WhatsApp agent)
+    @Query("SELECT * FROM reminders WHERE eventTimeMs >= :sinceMs ORDER BY eventTimeMs ASC")
+    fun getUpcomingReminders(sinceMs: Long = System.currentTimeMillis() - 3_600_000): Flow<List<ReminderEntity>>
+
+    @Query("SELECT * FROM reminders WHERE notified = 0 ORDER BY eventTimeMs ASC")
+    suspend fun getUnnotifiedReminders(): List<ReminderEntity>
+
+    @Query("SELECT * FROM reminders WHERE id = :id")
+    suspend fun getReminderByIdSync(id: Long): ReminderEntity?
+
+    // ponytail: IGNORE (not REPLACE) so an already-notified reminder keeps that state on
+    // re-sync — REPLACE would delete+reinsert on the unique sourceRefId conflict and reset
+    // `notified`, causing a re-fired notification every sync cycle. Known limitation: if a
+    // calendar event's time changes, the stale eventTimeMs sticks until the row is cleared.
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun upsertReminder(reminder: ReminderEntity): Long
+
+    @Query("UPDATE reminders SET notified = 1 WHERE id = :id")
+    suspend fun markReminderNotified(id: Long)
+
     // Audit Log
     @Query("SELECT * FROM audit_logs ORDER BY timestampMs DESC LIMIT 200")
     fun getAuditLogs(): Flow<List<AuditLogEntity>>

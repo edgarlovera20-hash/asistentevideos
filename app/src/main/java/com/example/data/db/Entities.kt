@@ -94,6 +94,18 @@ data class AuditLogEntity(
     val timestampMs: Long = System.currentTimeMillis()
 )
 
+@Entity(tableName = "reminders", indices = [androidx.room.Index(value = ["sourceRefId"], unique = true)])
+data class ReminderEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val source: String, // "CALENDAR" or "WHATSAPP"
+    val title: String,
+    val description: String = "",
+    val eventTimeMs: Long,
+    val sourceRefId: String, // Calendar event id, or a hash of the WhatsApp message for dedup
+    val notified: Boolean = false,
+    val createdAtMs: Long = System.currentTimeMillis()
+)
+
 @Entity(tableName = "meeting_summaries")
 data class MeetingSummaryEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,

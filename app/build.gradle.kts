@@ -48,6 +48,7 @@ android {
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
+    isCoreLibraryDesugaringEnabled = true // java.time on minSdk 24 (GoogleCalendarService)
   }
   buildFeatures {
     compose = true
@@ -74,6 +75,13 @@ dependencies {
   implementation(libs.androidx.camera.lifecycle)
   implementation(libs.androidx.camera.view)
   implementation(libs.mlkit.barcode.scanning)
+  implementation(libs.androidx.work.runtime.ktx)
+  implementation(libs.play.services.auth)
+  implementation(libs.kotlinx.coroutines.play.services)
+  coreLibraryDesugaring(libs.desugar.jdk.libs)
+  implementation(libs.androidx.credentials)
+  implementation(libs.androidx.credentials.play.services)
+  implementation(libs.googleid)
   implementation(libs.androidx.compose.material.icons.core)
   implementation(libs.androidx.compose.material.icons.extended)
   implementation(libs.androidx.compose.material3)
