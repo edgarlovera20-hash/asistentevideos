@@ -39,7 +39,9 @@ fun MeetingDetailScreen(
     val actionFeedback by viewModel.actionFeedback.collectAsState()
     val isAnalyzing by viewModel.isAnalyzingAI.collectAsState()
 
-    var activeTab by remember { mutableStateOf(0) } // 0: Resumen & IA, 1: Acuerdos & Tareas, 2: Exportar Doc, 3: Traducir & Acciones
+    val visualAssets by viewModel.activeVisualAssets.collectAsState()
+
+    var activeTab by remember { mutableStateOf(0) } // 0: Resumen & IA, 1: Tareas, 2: Generador, 3: Acciones IA, 4: Visual IA
     var showDocModal by remember { mutableStateOf(false) }
 
     if (meeting == null) {
@@ -129,16 +131,19 @@ fun MeetingDetailScreen(
             contentColor = CyanPrimary
         ) {
             Tab(selected = activeTab == 0, onClick = { activeTab = 0 }) {
-                Text("Resumen", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelMedium)
+                Text("Resumen", modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.labelSmall)
             }
             Tab(selected = activeTab == 1, onClick = { activeTab = 1 }) {
-                Text("Tareas (${tasks.size})", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelMedium)
+                Text("Tareas (${tasks.size})", modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.labelSmall)
             }
             Tab(selected = activeTab == 2, onClick = { activeTab = 2 }) {
-                Text("Generador", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelMedium)
+                Text("Docs", modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.labelSmall)
             }
             Tab(selected = activeTab == 3, onClick = { activeTab = 3 }) {
-                Text("Acciones IA", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelMedium)
+                Text("Acciones", modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.labelSmall)
+            }
+            Tab(selected = activeTab == 4, onClick = { activeTab = 4 }) {
+                Text("Visual IA (${visualAssets.size})", modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.labelSmall)
             }
         }
 
@@ -166,6 +171,10 @@ fun MeetingDetailScreen(
                 3 -> ActionsAndTranslationTab(
                     onTranslate = { lang -> viewModel.translateMeeting(lang) },
                     onAction = { action -> viewModel.executeActionWorkflow(action) }
+                )
+                4 -> MeetingVisualAssetsTab(
+                    visualAssets = visualAssets,
+                    onExecuteSkill = { skill -> viewModel.executeVisualSkill(skill) }
                 )
             }
         }
@@ -536,6 +545,60 @@ fun ActionsAndTranslationTab(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun MeetingVisualAssetsTab(
+    visualAssets: List<com.example.data.db.VisualAssetEntity>,
+    onExecuteSkill: (String) -> Unit
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item {
+            Text(
+                text = "🎨 Activos Visuales de la Reunión (${visualAssets.size})",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Text(
+                text = "Artefactos diagramados automáticamente por el Visual Intelligence Agent:",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
+                    onClick = { onExecuteSkill("GenerateMindMap") },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = CyanPrimary, contentColor = Color.Black)
+                ) {
+                    Text("Mapa Mental", style = MaterialTheme.typography.labelSmall)
+                }
+                Button(
+                    onClick = { onExecuteSkill("GenerateArchitectureDiagram") },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = VioletAccent, contentColor = Color.White)
+                ) {
+                    Text("Arquitectura C4", style = MaterialTheme.typography.labelSmall)
+                }
+            }
+        }
+
+        items(visualAssets) { asset ->
+            VisualAssetCard(
+                asset = asset,
+                onPreview = {},
+                onExport = { onExecuteSkill("Exportar ${asset.title}") }
+            )
         }
     }
 }

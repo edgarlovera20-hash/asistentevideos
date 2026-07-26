@@ -29,15 +29,6 @@ fun MainScreen(
 ) {
     var selectedTab by remember { mutableStateOf(0) }
     val meetings by viewModel.meetings.collectAsState()
-    val errorMessage by viewModel.errorMessage.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
-
-    LaunchedEffect(errorMessage) {
-        errorMessage?.let {
-            snackbarHostState.showSnackbar(it)
-            viewModel.dismissError()
-        }
-    }
 
     // Deep Link auto join trigger
     LaunchedEffect(initialDeepLinkUrl) {
@@ -57,7 +48,6 @@ fun MainScreen(
 
     Scaffold(
         contentWindowInsets = WindowInsets.safeDrawing,
-        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -128,13 +118,20 @@ fun MainScreen(
                 NavigationBarItem(
                     selected = selectedTab == 3,
                     onClick = { selectedTab = 3 },
+                    icon = { Icon(Icons.Default.Palette, contentDescription = "Visual IA") },
+                    label = { Text("Visual IA") },
+                    modifier = Modifier.testTag("nav_item_visual")
+                )
+                NavigationBarItem(
+                    selected = selectedTab == 4,
+                    onClick = { selectedTab = 4 },
                     icon = { Icon(Icons.Default.Chat, contentDescription = "Chat") },
                     label = { Text("Chat IA") },
                     modifier = Modifier.testTag("nav_item_chat")
                 )
                 NavigationBarItem(
-                    selected = selectedTab == 4,
-                    onClick = { selectedTab = 4 },
+                    selected = selectedTab == 5,
+                    onClick = { selectedTab = 5 },
                     icon = { Icon(Icons.Default.ManageSearch, contentDescription = "Memoria") },
                     label = { Text("Memoria") },
                     modifier = Modifier.testTag("nav_item_memory")
@@ -154,7 +151,8 @@ fun MainScreen(
                     onSelectMeeting = { meetingId ->
                         viewModel.selectMeeting(meetingId)
                         selectedTab = 2
-                    }
+                    },
+                    onOpenVisualCenter = { selectedTab = 3 }
                 )
                 1 -> RecordMeetingScreen(
                     viewModel = viewModel,
@@ -162,12 +160,19 @@ fun MainScreen(
                 )
                 2 -> MeetingDetailScreen(
                     viewModel = viewModel,
-                    onOpenChatClick = { selectedTab = 3 }
+                    onOpenChatClick = { selectedTab = 4 }
                 )
-                3 -> MeetingChatScreen(
+                3 -> VisualIntelligenceScreen(
+                    viewModel = viewModel,
+                    onSelectMeeting = { meetingId ->
+                        viewModel.selectMeeting(meetingId)
+                        selectedTab = 2
+                    }
+                )
+                4 -> MeetingChatScreen(
                     viewModel = viewModel
                 )
-                4 -> EnterpriseMemoryScreen(
+                5 -> EnterpriseMemoryScreen(
                     viewModel = viewModel,
                     onSelectMeeting = { meetingId ->
                         viewModel.selectMeeting(meetingId)

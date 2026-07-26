@@ -1,8 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item
-        android:width="66dp"
-        android:height="66dp"
-        android:drawable="@drawable/app_bot_logo_1785008057179"
-        android:gravity="center" />
-</layer-list>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Outer AI Orbital Ring (Scaled to 95% bounds) -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#7000FF"
+        android:strokeWidth="4"
+        android:pathData="M5,54 C5,26.94 26.94,5 54,5 C81.06,5 103,26.94 103,54 C103,81.06 81.06,103 54,103 C26.94,103 5,81.06 5,54 Z" />
+
+    <!-- Inner Glowing Ring (Cyan Primary) -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#00F2FE"
+        android:strokeWidth="5"
+        android:pathData="M13,54 C13,31.36 31.36,13 54,13 C76.64,13 95,31.36 95,54 C95,76.64 76.64,95 54,95 C31.36,95 13,76.64 13,54 Z" />
+
+    <!-- Main Central AI Star (White High Visibility - Max 95% Bounds) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,3 L60,48 L105,54 L60,60 L54,105 L48,60 L3,54 L48,48 Z" />
+
+    <!-- Core Cyan Accent Gem -->
+    <path
+        android:fillColor="#00F2FE"
+        android:pathData="M54,18 L58,50 L90,54 L58,58 L54,90 L50,58 L18,54 L50,50 Z" />
+
+    <!-- Core Violet Center Pulse -->
+    <path
+        android:fillColor="#7000FF"
+        android:pathData="M54,32 L56.5,51.5 L76,54 L56.5,56.5 L54,76 L51.5,56.5 L32,54 L51.5,51.5 Z" />
+
+    <!-- AI Network Orbital Nodes (Glow Dots at Edge Boundary) -->
+    <path
+        android:fillColor="#00F2FE"
+        android:pathData="M54,4 A4.5,4.5 0 1,1 53.99,4 Z" />
+    <path
+        android:fillColor="#00F2FE"
+        android:pathData="M104,54 A4.5,4.5 0 1,1 103.99,54 Z" />
+    <path
+        android:fillColor="#00F2FE"
+        android:pathData="M54,104 A4.5,4.5 0 1,1 53.99,104 Z" />
+    <path
+        android:fillColor="#00F2FE"
+        android:pathData="M4,54 A4.5,4.5 0 1,1 3.99,54 Z" />
+
+    <!-- Meeting Wave Arcs Left & Right (Broad Waves) -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#00F2FE"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:pathData="M3,28 C-3,44 -3,64 3,80" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#00F2FE"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:pathData="M105,28 C111,44 111,64 105,80" />
+</vector>
+
+

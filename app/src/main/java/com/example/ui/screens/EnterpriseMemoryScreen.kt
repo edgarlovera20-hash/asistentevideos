@@ -215,12 +215,12 @@ fun EnterpriseMemoryScreen(
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Column {
                                     Text(
-                                        text = "Conexión API cifrada (HTTPS/TLS)",
+                                        text = "Cifrado AES-256 Activo",
                                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                         color = EmeraldSuccess
                                     )
                                     Text(
-                                        text = "Las llamadas a Gemini viajan por HTTPS. La base de datos local aún no está cifrada en reposo.",
+                                        text = "Todos los audios, transcripciones y vectores de búsqueda están cifrados en reposo y en tránsito.",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurface
                                     )

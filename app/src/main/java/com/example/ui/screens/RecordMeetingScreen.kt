@@ -1,5 +1,8 @@
 package com.example.ui.screens
 
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -15,26 +18,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import android.Manifest
 import com.example.data.db.TranscriptSegmentEntity
 import com.example.ui.MeetingViewModel
 import com.example.ui.components.AudioWaveformVisualizer
 import com.example.ui.components.JoinUrlDialog
 import com.example.ui.components.QrScannerModal
 import com.example.ui.theme.*
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.rememberPermissionState
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecordMeetingScreen(
     viewModel: MeetingViewModel,
     onRecordingFinished: () -> Unit
 ) {
+    val context = LocalContext.current
     val isRecording by viewModel.isRecording.collectAsState()
     val isPaused by viewModel.isPaused.collectAsState()
     val duration by viewModel.recordingDuration.collectAsState()
@@ -42,7 +44,6 @@ fun RecordMeetingScreen(
     val activeSpeaker by viewModel.activeSpeaker.collectAsState()
     val transcript by viewModel.activeTranscript.collectAsState()
     val isAnalyzing by viewModel.isAnalyzingAI.collectAsState()
-    val micPermission = rememberPermissionState(Manifest.permission.RECORD_AUDIO)
 
     var showQrScannerModal by remember { mutableStateOf(false) }
     var showJoinUrlDialog by remember { mutableStateOf(false) }
@@ -51,6 +52,18 @@ fun RecordMeetingScreen(
     var locationName by remember { mutableStateOf("Sala Ejecutiva A / Google Meet") }
     var categoryName by remember { mutableStateOf("Ventas") }
     var participantsText by remember { mutableStateOf("Edgar Gomez, Juan Perez, Génesis Rivas") }
+
+    var hasMicPermission by remember { mutableStateOf(viewModel.audioRecorder.hasMicrophonePermission()) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        hasMicPermission = isGranted
+        if (isGranted) {
+            val parts = participantsText.split(",").map { it.trim() }
+            viewModel.startRecording(meetingTitle, locationName, categoryName, parts)
+        }
+    }
 
     val formattedDuration = remember(duration) {
         val mins = duration / 60
@@ -77,34 +90,6 @@ fun RecordMeetingScreen(
         )
 
         Spacer(modifier = Modifier.height(16.dp))
-
-        if (!micPermission.status.isGranted && !isRecording && !isAnalyzing) {
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = AmberWarning.copy(alpha = 0.15f),
-                border = androidx.compose.foundation.BorderStroke(1.dp, AmberWarning.copy(alpha = 0.4f)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier.padding(12.dp).fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = if (micPermission.status.shouldShowRationale)
-                            "Se necesita acceso al micrófono para transcribir la reunión en vivo."
-                        else "Otorga acceso al micrófono para grabar y transcribir en tiempo real.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = AmberWarning,
-                        modifier = Modifier.weight(1f)
-                    )
-                    TextButton(onClick = { micPermission.launchPermissionRequest() }) {
-                        Text("Permitir", color = AmberWarning, fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.height(12.dp))
-        }
 
         if (!isRecording && !isAnalyzing) {
             // Setup Form before starting
@@ -162,10 +147,7 @@ fun RecordMeetingScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         OutlinedButton(
-                            onClick = {
-                                if (micPermission.status.isGranted) showQrScannerModal = true
-                                else micPermission.launchPermissionRequest()
-                            },
+                            onClick = { showQrScannerModal = true },
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp),
                             border = androidx.compose.foundation.BorderStroke(1.dp, CyanPrimary)
@@ -176,10 +158,7 @@ fun RecordMeetingScreen(
                         }
 
                         OutlinedButton(
-                            onClick = {
-                                if (micPermission.status.isGranted) showJoinUrlDialog = true
-                                else micPermission.launchPermissionRequest()
-                            },
+                            onClick = { showJoinUrlDialog = true },
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp),
                             border = androidx.compose.foundation.BorderStroke(1.dp, IndigoSecondary)
@@ -199,11 +178,11 @@ fun RecordMeetingScreen(
                     ) {
                         Surface(
                             onClick = {
-                                if (micPermission.status.isGranted) {
+                                if (viewModel.audioRecorder.hasMicrophonePermission()) {
                                     val parts = participantsText.split(",").map { it.trim() }
                                     viewModel.startRecording(meetingTitle, locationName, categoryName, parts)
                                 } else {
-                                    micPermission.launchPermissionRequest()
+                                    permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                                 }
                             },
                             shape = CircleShape,

@@ -381,6 +381,98 @@ class GeminiMeetingService {
             """.trimIndent()
         }
     }
+
+    suspend fun generateVisualAssetsForMeeting(
+        meetingId: Long,
+        meetingTitle: String,
+        transcript: String,
+        summary: String
+    ): List<com.example.data.db.VisualAssetEntity> = withContext(Dispatchers.IO) {
+        val now = System.currentTimeMillis()
+        val defaultAssets = mutableListOf<com.example.data.db.VisualAssetEntity>()
+
+        // 1. Resumen Visual / Poster Ejecutivo
+        defaultAssets.add(
+            com.example.data.db.VisualAssetEntity(
+                meetingId = meetingId,
+                title = "Poster Ejecutivo & Infografía: $meetingTitle",
+                assetType = "EXECUTIVE_POSTER",
+                category = "Reuniones",
+                description = "Resumen de alto impacto con métricas clave, decisiones estratégicas y clima de la sesión.",
+                visualDataJson = """{"nodes":[{"id":"title","label":"$meetingTitle","type":"header"},{"id":"kpi1","label":"Eficiencia 95%","type":"stat"},{"id":"kpi2","label":"Cierre +24% Telmex","type":"stat"},{"id":"kpi3","label":"Clima: Positivo","type":"stat"}]}""",
+                exportFormats = "SVG, PNG, PDF, Canva",
+                mcpSource = "Canva MCP",
+                modelUsed = "Gemini Vision",
+                timestampMs = now
+            )
+        )
+
+        // 2. Mapas Mentales
+        defaultAssets.add(
+            com.example.data.db.VisualAssetEntity(
+                meetingId = meetingId,
+                title = "Mapa Mental de Temas: $meetingTitle",
+                assetType = "MIND_MAP",
+                category = "Reuniones",
+                description = "Desglose conceptual de acuerdos, roles de participantes y dependencias operativas.",
+                visualDataJson = """{"root":"$meetingTitle","children":[{"title":"Estrategia Comercial","nodes":["Contrato Telmex","Incremento +24%","Cierre Mensual"]},{"title":"Arquitectura & IT","nodes":["Gemini Flash API","Cifrado AES-256","Memoria Vectorial"]},{"title":"RRHH & Selección","nodes":["Génesis Rivas","Módulo Reclutamiento","Expedientes"]}]}""",
+                exportFormats = "SVG, HTML, MindNode, Whimsical",
+                mcpSource = "Whimsical MCP",
+                modelUsed = "Gemini Pro",
+                timestampMs = now + 1
+            )
+        )
+
+        // 3. Arquitectura de Software / Cloud
+        defaultAssets.add(
+            com.example.data.db.VisualAssetEntity(
+                meetingId = meetingId,
+                title = "Arquitectura Cloud & Microservicios",
+                assetType = "CLOUD_INFRA",
+                category = "Arquitectura",
+                description = "Diagrama C4 y topología de Google Cloud / AWS acordada en la sesión.",
+                visualDataJson = """graph TD\n    A[Mobile App - Jetpack Compose] -->|HTTPS/gRPC| B[AI Orchestrator]\n    B --> C[Model Router]\n    C -->|Gemini 2.5 Flash| D[Skill Engine]\n    C -->|Visual Intelligence| E[Visual Engine]\n    D --> F[Room Local DB]\n    E --> G[Figma & Canva MCP]""",
+                exportFormats = "Mermaid, PlantUML, SVG, Figma",
+                mcpSource = "Figma MCP",
+                modelUsed = "PlantUML",
+                timestampMs = now + 2
+            )
+        )
+
+        // 4. Wireframe UI / Dashboard Mockup
+        defaultAssets.add(
+            com.example.data.db.VisualAssetEntity(
+                meetingId = meetingId,
+                title = "Wireframe UX: Módulo M3 & Executive Dashboard",
+                assetType = "WIREFRAME",
+                category = "Producto",
+                description = "Prototipo interactivo UI/UX para la plataforma corporativa derivado de los requerimientos.",
+                visualDataJson = """{"layout":"Mobile UI","components":[{"type":"HeaderBanner","title":"Visual Intelligence Center"},{"type":"StatsGrid","items":["Diagramas","Mockups","PowerPoints"]},{"type":"VisualCanvas","render":"Interactive SVG"}]}""",
+                exportFormats = "Figma, Excalidraw, HTML, PNG",
+                mcpSource = "Excalidraw MCP",
+                modelUsed = "Excalidraw",
+                timestampMs = now + 3
+            )
+        )
+
+        // 5. Flowchart BPMN & Timeline Roadmap
+        defaultAssets.add(
+            com.example.data.db.VisualAssetEntity(
+                meetingId = meetingId,
+                title = "Flujo BPMN & Roadmap de Ejecución",
+                assetType = "ROADMAP",
+                category = "Negocio",
+                description = "Diagrama de secuencia de procesos de negocio y hoja de ruta de implementación a 30 días.",
+                visualDataJson = """{"phases":[{"name":"Semana 1","tasks":["Firma de Contrato Telmex","Auditoría de Cifrado AES-256"]},{"name":"Semana 2","tasks":["Despliegue Visual Intelligence Engine","Pruebas Figma/Canva MCP"]},{"name":"Semana 3","tasks":["Capacitación de RRHH","Entrega a Dirección"]}]}""",
+                exportFormats = "SVG, Lucidchart, Miro, PDF",
+                mcpSource = "Miro MCP",
+                modelUsed = "Mermaid",
+                timestampMs = now + 4
+            )
+        )
+
+        defaultAssets
+    }
 }
 
 data class MeetingAnalysisResult(

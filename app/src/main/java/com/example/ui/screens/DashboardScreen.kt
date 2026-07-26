@@ -37,7 +37,8 @@ import com.example.ui.theme.*
 fun DashboardScreen(
     viewModel: MeetingViewModel,
     onStartRecordingClick: () -> Unit,
-    onSelectMeeting: (Long) -> Unit
+    onSelectMeeting: (Long) -> Unit,
+    onOpenVisualCenter: () -> Unit = {}
 ) {
     val meetings by viewModel.meetings.collectAsState()
     val allTasks by viewModel.allTasks.collectAsState()
@@ -121,6 +122,15 @@ fun DashboardScreen(
                 )
             }
 
+            // Hero Callout
+            item {
+                HeaderBanner(
+                    title = "Memoria Corporativa Activa",
+                    subtitle = "Todas tus reuniones transcritas, resumidas e indexadas en tiempo real con Gemini 2.5 Pro.",
+                    roleTag = "${currentUser.provider.label} • AES-256"
+                )
+            }
+
             // Feedback Toast Banner if action performed
             if (!actionFeedback.isNullOrBlank()) {
                 item {
@@ -170,6 +180,30 @@ fun DashboardScreen(
                         Text(
                             text = "● INICIAR NUEVA GRABACIÓN",
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                        )
+                    }
+
+                    Button(
+                        onClick = onOpenVisualCenter,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .testTag("visual_intelligence_center_button"),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = VioletAccent,
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Palette,
+                            contentDescription = "Visual Center",
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "🎨 VISUAL INTELLIGENCE CENTER (AGENTE #11)",
+                            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
                         )
                     }
 
