@@ -29,27 +29,27 @@ private val DarkColorScheme = darkColorScheme(
     outline = CodexBorder
 )
 
-private val LightColorScheme = darkColorScheme(
-    primary = CodexWhite,
-    onPrimary = CodexBlack,
-    primaryContainer = CodexDarkSurface,
-    onPrimaryContainer = CodexWhite,
-    secondary = CodexGrayLight,
-    onSecondary = CodexBlack,
-    secondaryContainer = CodexSurfaceVariant,
-    tertiary = CodexWhite,
-    background = CodexBlack,
-    onBackground = CodexWhite,
-    surface = CodexDarkSurface,
-    onSurface = CodexWhite,
-    surfaceVariant = CodexSurfaceVariant,
-    onSurfaceVariant = CodexGrayLight,
-    outline = CodexBorder
+private val LightColorScheme = lightColorScheme(
+    primary = CodexBlackText,
+    onPrimary = CodexLightSurface,
+    primaryContainer = CodexLightSurfaceVariant,
+    onPrimaryContainer = CodexBlackText,
+    secondary = CodexLightGrayText,
+    onSecondary = CodexLightSurface,
+    secondaryContainer = CodexLightSurfaceVariant,
+    tertiary = CodexBlackText,
+    background = CodexLightBackground,
+    onBackground = CodexBlackText,
+    surface = CodexLightSurface,
+    onSurface = CodexBlackText,
+    surfaceVariant = CodexLightSurfaceVariant,
+    onSurfaceVariant = CodexLightGrayText,
+    outline = CodexLightBorder
 )
 
 @Composable
 fun HeavenlyAIMeetingTheme(
-    darkTheme: Boolean = true, // Default to dark theme for sleek futuristic look
+    darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = false, // Use our handcrafted palette
     content: @Composable () -> Unit,
 ) {
