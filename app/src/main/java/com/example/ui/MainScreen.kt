@@ -97,12 +97,12 @@ fun MainScreen(
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
-                                text = "Heavenly AI",
+                                text = "Heavenly Dreams",
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                 color = CodexWhite
                             )
                             Text(
-                                text = "Enterprise Meeting Intelligence",
+                                text = "Captura • Transcribe • Organiza",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = CodexGrayLight
                             )
