@@ -127,7 +127,7 @@ class GeminiAudioTranscriptionService {
             val trimmed = line.trim()
             if (trimmed.isBlank()) continue
 
-            var speakerName = participants.firstOrNull() ?: "Edgar Gomez"
+            var speakerName = participants.firstOrNull() ?: "Participante"
             var speakerTag = "Persona 1"
             var segmentText = trimmed
 
@@ -148,7 +148,7 @@ class GeminiAudioTranscriptionService {
             segments.add(
                 AudioTranscriptSegment(
                     speakerTag = speakerTag.ifBlank { "Persona 1" },
-                    speakerName = speakerName.ifBlank { "Edgar Gomez" },
+                    speakerName = speakerName.ifBlank { "Participante" },
                     text = segmentText,
                     timestampMs = currentMs
                 )
@@ -157,7 +157,7 @@ class GeminiAudioTranscriptionService {
         }
 
         return if (segments.isNotEmpty()) segments else listOf(
-            AudioTranscriptSegment("Persona 1", participants.getOrNull(0) ?: "Edgar Gomez", text, 0L)
+            AudioTranscriptSegment("Persona 1", participants.getOrNull(0) ?: "Participante", text, 0L)
         )
     }
 
@@ -165,7 +165,7 @@ class GeminiAudioTranscriptionService {
         title: String,
         participants: List<String>
     ): AudioTranscriptionResult {
-        val p1 = participants.getOrNull(0) ?: "Edgar Gomez"
+        val p1 = participants.getOrNull(0) ?: "Participante"
 
         val segments = listOf(
             AudioTranscriptSegment("Persona 1", p1, "No se pudo transcribir el audio (sin API key configurada o sin conexión). Revisa .env y vuelve a intentarlo.", 0L)
