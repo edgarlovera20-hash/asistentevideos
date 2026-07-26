@@ -28,6 +28,7 @@ fun MainScreen(
     onDeepLinkConsumed: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableStateOf(0) }
+    var showAiSettings by remember { mutableStateOf(false) }
     val meetings by viewModel.meetings.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -74,6 +75,11 @@ fun MainScreen(
         }
     }
 
+    if (showAiSettings) {
+        AiSettingsScreen(onBack = { showAiSettings = false })
+        return
+    }
+
     Scaffold(
         contentWindowInsets = WindowInsets.safeDrawing,
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -107,6 +113,11 @@ fun MainScreen(
                                 color = CodexGrayLight
                             )
                         }
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { showAiSettings = true }) {
+                        Icon(Icons.Default.Settings, contentDescription = "Ajustes de IA", tint = CodexWhite)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
