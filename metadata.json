@@ -1,5 +1,5 @@
 {
-  "name": "Heavenly AI Meeting",
+  "name": "Heavenly Dreams Meeting AI",
   "description": "Plataforma inteligente de grabación, transcripción, resúmenes ejecutivos con IA, chat, memoria empresarial y reportes.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
