@@ -3,8 +3,13 @@ package com.example.data.ai
 import com.example.data.api.GeminiMeetingService
 import com.example.data.api.MeetingAnalysisResult
 
-/** Thin adapter — delegates to the existing, already-working GeminiMeetingService instead of duplicating its logic. */
-class GeminiTextService(private val gemini: GeminiMeetingService = GeminiMeetingService()) : AiTextService {
+/**
+ * Thin adapter — delegates to the existing, already-working GeminiMeetingService instead of
+ * duplicating its logic. [apiKeyOverride] is the key set in Ajustes IA, if any; falls back to
+ * the build's default (.env) key when null/blank.
+ */
+class GeminiTextService(apiKeyOverride: String? = null) : AiTextService {
+    private val gemini = GeminiMeetingService(apiKeyOverride)
     override suspend fun analyzeMeeting(transcript: String, participants: String, meetingTitle: String): MeetingAnalysisResult =
         gemini.analyzeMeetingFull(transcript, participants, meetingTitle)
 
