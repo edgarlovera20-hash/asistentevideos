@@ -8,6 +8,7 @@ enum class AiProvider(val label: String, val defaultModel: String) {
     ANTHROPIC("Anthropic Claude", "claude-sonnet-4-5"),
     OPENAI("OpenAI", "gpt-4o-mini"),
     KIMI("Kimi (Moonshot)", "moonshot-v1-8k"),
+    NVIDIA_NIM("NVIDIA NIM", "moonshotai/kimi-k2.6"),
     OLLAMA("Ollama (local)", "llama3"),
     LMSTUDIO("LM Studio (local)", "local-model")
 }
