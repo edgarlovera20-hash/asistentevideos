@@ -32,14 +32,14 @@ fun StatCard(
     value: String,
     subtitle: String,
     icon: ImageVector,
-    accentColor: Color,
+    accentColor: Color = CodexWhite,
     modifier: Modifier = Modifier
 ) {
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
+        shape = RoundedCornerShape(12.dp),
+        color = CodexDarkSurface,
+        border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -52,33 +52,34 @@ fun StatCard(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = CodexGrayLight
                 )
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
+                        .size(32.dp)
                         .clip(CircleShape)
-                        .background(accentColor.copy(alpha = 0.15f)),
+                        .background(CodexBorder),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        tint = accentColor,
-                        modifier = Modifier.size(20.dp)
+                        tint = CodexWhite,
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = value,
                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onSurface
+                color = CodexWhite
             )
+            Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.labelSmall,
-                color = accentColor
+                color = CodexGrayLight
             )
         }
     }
@@ -104,26 +105,22 @@ fun AudioWaveformVisualizer(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(60.dp)
-            .padding(horizontal = 16.dp),
+            .height(56.dp)
+            .padding(horizontal = 12.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        val displayAmps = if (amplitudes.isEmpty()) List(24) { 0.2f } else amplitudes
+        val displayAmps = if (amplitudes.isEmpty()) List(28) { 0.2f } else amplitudes
         displayAmps.takeLast(28).forEachIndexed { index, amp ->
             val factor = if (isRecording) (amp * (0.5f + (index % 5) * 0.1f * waveOffset)) else 0.15f
-            val barHeight = (factor * 50).coerceIn(6f, 54f).dp
+            val barHeight = (factor * 48).coerceIn(4f, 48f).dp
 
             Box(
                 modifier = Modifier
-                    .width(4.dp)
+                    .width(3.dp)
                     .height(barHeight)
                     .clip(RoundedCornerShape(2.dp))
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(CyanPrimary, IndigoSecondary)
-                        )
-                    )
+                    .background(if (index % 2 == 0) CodexWhite else CodexGrayLight)
             )
         }
     }
@@ -135,17 +132,11 @@ fun SentimentBadge(
     score: Float?
 ) {
     val label = sentiment ?: "Positivo"
-    val color = when {
-        label.contains("Positivo", true) || label.contains("Optimista", true) -> EmeraldSuccess
-        label.contains("Tenso", true) || label.contains("Riesgo", true) -> RoseDanger
-        label.contains("Urgente", true) -> AmberWarning
-        else -> CyanPrimary
-    }
 
     Surface(
-        shape = RoundedCornerShape(20.dp),
-        color = color.copy(alpha = 0.15f),
-        border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.4f))
+        shape = RoundedCornerShape(16.dp),
+        color = CodexBorder,
+        border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorderLight)
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
@@ -153,15 +144,15 @@ fun SentimentBadge(
         ) {
             Box(
                 modifier = Modifier
-                    .size(8.dp)
+                    .size(6.dp)
                     .clip(CircleShape)
-                    .background(color)
+                    .background(CodexWhite)
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = "$label ${if (score != null) "${(score * 100).toInt()}%" else ""}",
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                color = color
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
+                color = CodexWhite
             )
         }
     }
@@ -175,38 +166,27 @@ fun HeaderBanner(
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant
+        shape = RoundedCornerShape(14.dp),
+        color = CodexDarkSurface,
+        border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(
-                    Brush.horizontalGradient(
-                        colors = listOf(
-                            DarkSurfaceVariant,
-                            IndigoSecondary.copy(alpha = 0.3f)
-                        )
-                    )
-                )
                 .padding(18.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Surface(
-                    shape = RoundedCornerShape(14.dp),
-                    color = Color.Transparent,
-                    border = androidx.compose.foundation.BorderStroke(1.dp, CyanPrimary.copy(alpha = 0.5f)),
-                    modifier = Modifier.size(52.dp)
+                Box(
+                    modifier = Modifier.size(44.dp),
+                    contentAlignment = Alignment.Center
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.app_bot_logo_1785008057179),
+                        painter = painterResource(id = R.drawable.ic_launcher_foreground),
                         contentDescription = "Bot Tomador de Notas Heavenly AI",
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(RoundedCornerShape(14.dp))
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
 
@@ -221,28 +201,30 @@ fun HeaderBanner(
                         Text(
                             text = title,
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = CodexWhite
                         )
                         Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = CyanPrimary.copy(alpha = 0.2f)
+                            shape = RoundedCornerShape(8.dp),
+                            color = CodexBorder,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorderLight)
                         ) {
                             Text(
                                 text = roleTag,
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                color = CyanPrimary,
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
+                                color = CodexWhite,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                             )
                         }
                     }
-                    Spacer(modifier = Modifier.height(3.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = subtitle,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = CodexGrayLight
                     )
                 }
             }
         }
     }
 }
+

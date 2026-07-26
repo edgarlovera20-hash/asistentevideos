@@ -12,38 +12,39 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = CyanPrimary,
-    onPrimary = Color.Black,
-    primaryContainer = CyanPrimaryDark,
-    onPrimaryContainer = Color.White,
-    secondary = IndigoSecondary,
-    onSecondary = Color.White,
-    secondaryContainer = DarkSurfaceVariant,
-    tertiary = VioletAccent,
-    background = DarkBackground,
-    onBackground = TextPrimaryDark,
-    surface = DarkSurface,
-    onSurface = TextPrimaryDark,
-    surfaceVariant = DarkSurfaceVariant,
-    onSurfaceVariant = TextSecondaryDark,
-    outline = DarkCardBorder
+    primary = CodexWhite,
+    onPrimary = CodexBlack,
+    primaryContainer = CodexDarkSurface,
+    onPrimaryContainer = CodexWhite,
+    secondary = CodexGrayLight,
+    onSecondary = CodexBlack,
+    secondaryContainer = CodexSurfaceVariant,
+    tertiary = CodexWhite,
+    background = CodexBlack,
+    onBackground = CodexWhite,
+    surface = CodexDarkSurface,
+    onSurface = CodexWhite,
+    surfaceVariant = CodexSurfaceVariant,
+    onSurfaceVariant = CodexGrayLight,
+    outline = CodexBorder
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = CyanPrimaryDark,
-    onPrimary = Color.White,
-    primaryContainer = Color(0xFFE0F7FA),
-    onPrimaryContainer = Color(0xFF006064),
-    secondary = IndigoSecondary,
-    onSecondary = Color.White,
-    tertiary = VioletAccent,
-    background = LightBackground,
-    onBackground = TextPrimaryLight,
-    surface = LightSurface,
-    onSurface = TextPrimaryLight,
-    surfaceVariant = LightSurfaceVariant,
-    onSurfaceVariant = TextSecondaryLight,
-    outline = Color(0xFFCBD5E1)
+private val LightColorScheme = darkColorScheme(
+    primary = CodexWhite,
+    onPrimary = CodexBlack,
+    primaryContainer = CodexDarkSurface,
+    onPrimaryContainer = CodexWhite,
+    secondary = CodexGrayLight,
+    onSecondary = CodexBlack,
+    secondaryContainer = CodexSurfaceVariant,
+    tertiary = CodexWhite,
+    background = CodexBlack,
+    onBackground = CodexWhite,
+    surface = CodexDarkSurface,
+    onSurface = CodexWhite,
+    surfaceVariant = CodexSurfaceVariant,
+    onSurfaceVariant = CodexGrayLight,
+    outline = CodexBorder
 )
 
 @Composable

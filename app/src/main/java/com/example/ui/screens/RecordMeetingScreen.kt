@@ -81,12 +81,12 @@ fun RecordMeetingScreen(
         Text(
             text = "Grabación & Transcripción en Tiempo Real",
             style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onBackground
+            color = CodexWhite
         )
         Text(
             text = "Diarización automática de hablantes e IA adaptativa",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = CodexGrayLight
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -94,9 +94,9 @@ fun RecordMeetingScreen(
         if (!isRecording && !isAnalyzing) {
             // Setup Form before starting
             Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = MaterialTheme.colorScheme.surface,
-                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
+                shape = RoundedCornerShape(12.dp),
+                color = CodexDarkSurface,
+                border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
@@ -106,9 +106,15 @@ fun RecordMeetingScreen(
                     OutlinedTextField(
                         value = meetingTitle,
                         onValueChange = { meetingTitle = it },
-                        label = { Text("Título de la Reunión") },
+                        label = { Text("Título de la Reunión", color = CodexGrayLight) },
                         modifier = Modifier.fillMaxWidth().testTag("meeting_title_input"),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(10.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = CodexWhite,
+                            unfocusedTextColor = CodexWhite,
+                            focusedBorderColor = CodexWhite,
+                            unfocusedBorderColor = CodexBorder
+                        )
                     )
 
                     Row(
@@ -118,25 +124,43 @@ fun RecordMeetingScreen(
                         OutlinedTextField(
                             value = categoryName,
                             onValueChange = { categoryName = it },
-                            label = { Text("Categoría") },
+                            label = { Text("Categoría", color = CodexGrayLight) },
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(10.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = CodexWhite,
+                                unfocusedTextColor = CodexWhite,
+                                focusedBorderColor = CodexWhite,
+                                unfocusedBorderColor = CodexBorder
+                            )
                         )
                         OutlinedTextField(
                             value = locationName,
                             onValueChange = { locationName = it },
-                            label = { Text("Ubicación") },
+                            label = { Text("Ubicación", color = CodexGrayLight) },
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(10.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = CodexWhite,
+                                unfocusedTextColor = CodexWhite,
+                                focusedBorderColor = CodexWhite,
+                                unfocusedBorderColor = CodexBorder
+                            )
                         )
                     }
 
                     OutlinedTextField(
                         value = participantsText,
                         onValueChange = { participantsText = it },
-                        label = { Text("Participantes (separados por coma)") },
+                        label = { Text("Participantes (separados por coma)", color = CodexGrayLight) },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(10.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = CodexWhite,
+                            unfocusedTextColor = CodexWhite,
+                            focusedBorderColor = CodexWhite,
+                            unfocusedBorderColor = CodexBorder
+                        )
                     )
 
                     Spacer(modifier = Modifier.height(4.dp))
@@ -146,32 +170,40 @@ fun RecordMeetingScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        OutlinedButton(
+                        Button(
                             onClick = { showQrScannerModal = true },
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, CyanPrimary)
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = CodexDarkSurface,
+                                contentColor = CodexWhite
+                            ),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder)
                         ) {
-                            Icon(imageVector = Icons.Default.QrCodeScanner, contentDescription = null, tint = CyanPrimary, modifier = Modifier.size(16.dp))
+                            Icon(imageVector = Icons.Default.QrCodeScanner, contentDescription = null, tint = CodexWhite, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Escanear QR", style = MaterialTheme.typography.labelMedium, color = CyanPrimary)
+                            Text("Escanear QR", style = MaterialTheme.typography.labelMedium, color = CodexWhite)
                         }
 
-                        OutlinedButton(
+                        Button(
                             onClick = { showJoinUrlDialog = true },
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, IndigoSecondary)
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = CodexDarkSurface,
+                                contentColor = CodexWhite
+                            ),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder)
                         ) {
-                            Icon(imageVector = Icons.Default.Link, contentDescription = null, tint = IndigoSecondary, modifier = Modifier.size(16.dp))
+                            Icon(imageVector = Icons.Default.Link, contentDescription = null, tint = CodexWhite, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Pegar Enlace", style = MaterialTheme.typography.labelMedium, color = IndigoSecondary)
+                            Text("Pegar Enlace", style = MaterialTheme.typography.labelMedium, color = CodexWhite)
                         }
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Giant Start Button
+                    // Giant Start Button - White background, black icon/text
                     Box(
                         modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
@@ -186,10 +218,10 @@ fun RecordMeetingScreen(
                                 }
                             },
                             shape = CircleShape,
-                            color = CyanPrimary,
+                            color = CodexWhite,
                             shadowElevation = 8.dp,
                             modifier = Modifier
-                                .size(110.dp)
+                                .size(100.dp)
                                 .testTag("huge_start_recording_button")
                         ) {
                             Column(
@@ -199,13 +231,14 @@ fun RecordMeetingScreen(
                                 Icon(
                                     imageVector = Icons.Default.Mic,
                                     contentDescription = "Grabar",
-                                    tint = Color.Black,
-                                    modifier = Modifier.size(36.dp)
+                                    tint = CodexBlack,
+                                    modifier = Modifier.size(32.dp)
                                 )
+                                Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = "INICIAR",
                                     style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                                    color = Color.Black
+                                    color = CodexBlack
                                 )
                             }
                         }
@@ -225,34 +258,34 @@ fun RecordMeetingScreen(
                     verticalArrangement = Arrangement.Center
                 ) {
                     CircularProgressIndicator(
-                        color = CyanPrimary,
-                        strokeWidth = 4.dp,
-                        modifier = Modifier.size(64.dp)
+                        color = CodexWhite,
+                        strokeWidth = 3.dp,
+                        modifier = Modifier.size(56.dp)
                     )
                     Spacer(modifier = Modifier.height(20.dp))
                     Text(
                         text = "Analizando Reunión con Gemini 2.5...",
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = CyanPrimary
+                        color = CodexWhite
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = "Generando resumen, detección de tareas, sentimiento y minutas.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = CodexGrayLight
                     )
                 }
             }
         } else {
             // Active Recording UI
             Surface(
-                shape = RoundedCornerShape(20.dp),
-                color = MaterialTheme.colorScheme.surface,
-                border = androidx.compose.foundation.BorderStroke(1.dp, CyanPrimary.copy(alpha = 0.5f)),
+                shape = RoundedCornerShape(14.dp),
+                color = CodexDarkSurface,
+                border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
-                    modifier = Modifier.padding(20.dp),
+                    modifier = Modifier.padding(18.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Row(
@@ -263,22 +296,22 @@ fun RecordMeetingScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(
                                 modifier = Modifier
-                                    .size(12.dp)
+                                    .size(10.dp)
                                     .clip(CircleShape)
-                                    .background(if (isPaused) AmberWarning else RoseDanger)
+                                    .background(CodexWhite)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = if (isPaused) "PAUSADO" else "GRABANDO...",
                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                                color = if (isPaused) AmberWarning else RoseDanger
+                                color = CodexWhite
                             )
                         }
 
                         Text(
                             text = formattedDuration,
                             style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                            color = CyanPrimary
+                            color = CodexWhite
                         )
                     }
 
@@ -295,35 +328,36 @@ fun RecordMeetingScreen(
                     Text(
                         text = "Hablante Actual: $activeSpeaker",
                         style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                        color = IndigoSecondary
+                        color = CodexGrayLight
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
                     // Control Buttons
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         if (isPaused) {
                             Button(
                                 onClick = { viewModel.resumeRecording() },
-                                colors = ButtonDefaults.buttonColors(containerColor = CyanPrimary, contentColor = Color.Black),
-                                shape = RoundedCornerShape(12.dp)
+                                colors = ButtonDefaults.buttonColors(containerColor = CodexWhite, contentColor = CodexBlack),
+                                shape = RoundedCornerShape(10.dp)
                             ) {
-                                Icon(imageVector = Icons.Default.PlayArrow, contentDescription = "Continuar")
+                                Icon(imageVector = Icons.Default.PlayArrow, contentDescription = "Continuar", tint = CodexBlack)
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("Continuar")
+                                Text("Continuar", color = CodexBlack, fontWeight = FontWeight.Bold)
                             }
                         } else {
                             Button(
                                 onClick = { viewModel.pauseRecording() },
-                                colors = ButtonDefaults.buttonColors(containerColor = AmberWarning, contentColor = Color.Black),
-                                shape = RoundedCornerShape(12.dp)
+                                colors = ButtonDefaults.buttonColors(containerColor = CodexSurfaceVariant, contentColor = CodexWhite),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder),
+                                shape = RoundedCornerShape(10.dp)
                             ) {
-                                Icon(imageVector = Icons.Default.Pause, contentDescription = "Pausa")
+                                Icon(imageVector = Icons.Default.Pause, contentDescription = "Pausa", tint = CodexWhite)
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("Pausa")
+                                Text("Pausa", color = CodexWhite)
                             }
                         }
 
@@ -332,13 +366,13 @@ fun RecordMeetingScreen(
                                 viewModel.stopRecordingAndAnalyze()
                                 onRecordingFinished()
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = RoseDanger, contentColor = Color.White),
-                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = CodexWhite, contentColor = CodexBlack),
+                            shape = RoundedCornerShape(10.dp),
                             modifier = Modifier.testTag("stop_recording_button")
                         ) {
-                            Icon(imageVector = Icons.Default.Stop, contentDescription = "Finalizar")
+                            Icon(imageVector = Icons.Default.Stop, contentDescription = "Finalizar", tint = CodexBlack)
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Finalizar & Analizar")
+                            Text("Finalizar & Analizar", color = CodexBlack, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -349,7 +383,7 @@ fun RecordMeetingScreen(
             Text(
                 text = "Transcripción en Vivo (Diarización)",
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onBackground
+                color = CodexWhite
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -391,8 +425,9 @@ fun RecordMeetingScreen(
 @Composable
 fun LiveTranscriptBubble(segment: TranscriptSegmentEntity) {
     Surface(
-        shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant,
+        shape = RoundedCornerShape(10.dp),
+        color = CodexDarkSurface,
+        border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
@@ -405,19 +440,19 @@ fun LiveTranscriptBubble(segment: TranscriptSegmentEntity) {
                 Text(
                     text = "${segment.speakerTag} (${segment.speakerName})",
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                    color = CyanPrimary
+                    color = CodexWhite
                 )
                 Text(
                     text = "${segment.timestampMs / 1000}s",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = CodexGrayLight
                 )
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = segment.text,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface
+                color = CodexWhite
             )
         }
     }

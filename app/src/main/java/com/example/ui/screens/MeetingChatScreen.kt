@@ -67,31 +67,32 @@ fun MeetingChatScreen(
         ) {
             Column {
                 Text(
-                    text = "💬 Chat con la Reunión",
+                    text = "Chat con la Reunión",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onBackground
+                    color = CodexWhite
                 )
                 Text(
                     text = activeMeeting?.title ?: "Memoria Corporativa Gemini",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = CodexGrayLight
                 )
             }
 
             Surface(
                 shape = RoundedCornerShape(20.dp),
-                color = CyanPrimary.copy(alpha = 0.15f)
+                color = CodexDarkSurface,
+                border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder)
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(CyanPrimary))
+                    Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(CodexWhite))
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "Gemini 2.5 Pro",
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                        color = CyanPrimary
+                        color = CodexWhite
                     )
                 }
             }
@@ -109,11 +110,12 @@ fun MeetingChatScreen(
                     onClick = {
                         viewModel.sendChatMessage(question)
                     },
-                    label = { Text(question, style = MaterialTheme.typography.labelSmall) },
+                    label = { Text(question, style = MaterialTheme.typography.labelSmall, color = CodexWhite) },
                     colors = SuggestionChipDefaults.suggestionChipColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        labelColor = MaterialTheme.colorScheme.onSurface
+                        containerColor = CodexDarkSurface,
+                        labelColor = CodexWhite
                     ),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder),
                     shape = RoundedCornerShape(16.dp)
                 )
             }
@@ -144,7 +146,15 @@ fun MeetingChatScreen(
             OutlinedTextField(
                 value = inputText,
                 onValueChange = { inputText = it },
-                placeholder = { Text("Haz una pregunta sobre la reunión...") },
+                placeholder = { Text("Haz una pregunta sobre la reunión...", color = CodexGrayLight) },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = CodexWhite,
+                    unfocusedBorderColor = CodexBorder,
+                    focusedTextColor = CodexWhite,
+                    unfocusedTextColor = CodexWhite,
+                    focusedContainerColor = CodexDarkSurface,
+                    unfocusedContainerColor = CodexDarkSurface
+                ),
                 modifier = Modifier
                     .weight(1f)
                     .testTag("chat_input_text"),
@@ -162,12 +172,12 @@ fun MeetingChatScreen(
                         viewModel.sendChatMessage(text)
                     }
                 },
-                containerColor = CyanPrimary,
-                contentColor = Color.Black,
+                containerColor = CodexWhite,
+                contentColor = CodexBlack,
                 shape = CircleShape,
                 modifier = Modifier.testTag("send_chat_message_button")
             ) {
-                Icon(imageVector = Icons.Default.Send, contentDescription = "Enviar")
+                Icon(imageVector = Icons.Default.Send, contentDescription = "Enviar", tint = CodexBlack)
             }
         }
     }
@@ -183,25 +193,26 @@ fun ChatMessageBubble(message: ChatMessageEntity) {
     ) {
         Surface(
             shape = RoundedCornerShape(
-                topStart = 16.dp,
-                topEnd = 16.dp,
-                bottomStart = if (isUser) 16.dp else 4.dp,
-                bottomEnd = if (isUser) 4.dp else 16.dp
+                topStart = 12.dp,
+                topEnd = 12.dp,
+                bottomStart = if (isUser) 12.dp else 2.dp,
+                bottomEnd = if (isUser) 2.dp else 12.dp
             ),
-            color = if (isUser) IndigoSecondary else MaterialTheme.colorScheme.surfaceVariant,
+            color = CodexDarkSurface,
+            border = androidx.compose.foundation.BorderStroke(1.dp, if (isUser) CodexWhite.copy(alpha = 0.5f) else CodexBorder),
             modifier = Modifier.widthIn(max = 280.dp)
         ) {
             Column(modifier = Modifier.padding(12.dp)) {
                 Text(
                     text = message.sender,
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                    color = if (isUser) Color.White.copy(alpha = 0.8f) else CyanPrimary
+                    color = if (isUser) CodexGrayLight else CodexWhite
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = message.messageText,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = if (isUser) Color.White else MaterialTheme.colorScheme.onSurface
+                    color = CodexWhite
                 )
             }
         }

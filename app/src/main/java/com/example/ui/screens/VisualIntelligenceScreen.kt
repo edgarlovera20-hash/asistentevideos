@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -119,20 +120,28 @@ fun VisualIntelligenceScreen(
         // Navigation Tabs
         TabRow(
             selectedTabIndex = activeTab,
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-            contentColor = CyanPrimary
+            containerColor = CodexDarkSurface,
+            contentColor = CodexWhite,
+            indicator = { tabPositions ->
+                if (activeTab < tabPositions.size) {
+                    TabRowDefaults.SecondaryIndicator(
+                        modifier = Modifier.tabIndicatorOffset(tabPositions[activeTab]),
+                        color = CodexWhite
+                    )
+                }
+            }
         ) {
             Tab(selected = activeTab == 0, onClick = { activeTab = 0 }) {
-                Text("Biblioteca Visual", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelSmall)
+                Text("Biblioteca Visual", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelSmall, color = if (activeTab == 0) CodexWhite else CodexGrayLight)
             }
             Tab(selected = activeTab == 1, onClick = { activeTab = 1 }) {
-                Text("Skill Engine (30)", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelSmall)
+                Text("Skill Engine (30)", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelSmall, color = if (activeTab == 1) CodexWhite else CodexGrayLight)
             }
             Tab(selected = activeTab == 2, onClick = { activeTab = 2 }) {
-                Text("Model Router & MCP", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelSmall)
+                Text("Model Router & MCP", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelSmall, color = if (activeTab == 2) CodexWhite else CodexGrayLight)
             }
             Tab(selected = activeTab == 3, onClick = { activeTab = 3 }) {
-                Text("11 Agentes & Entregables", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelSmall)
+                Text("11 Agentes & Entregables", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelSmall, color = if (activeTab == 3) CodexWhite else CodexGrayLight)
             }
         }
 
@@ -580,17 +589,17 @@ fun VisualIntelligenceScreen(
 @Composable
 fun IndicatorChip(label: String, value: String, color: Color, modifier: Modifier = Modifier) {
     Surface(
-        shape = RoundedCornerShape(12.dp),
-        color = color.copy(alpha = 0.15f),
-        border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.3f)),
+        shape = RoundedCornerShape(10.dp),
+        color = CodexDarkSurface,
+        border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder),
         modifier = modifier
     ) {
         Column(
             modifier = Modifier.padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = value, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), color = color)
-            Text(text = label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface, fontSize = 9.sp)
+            Text(text = value, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), color = CodexWhite)
+            Text(text = label, style = MaterialTheme.typography.labelSmall, color = CodexGrayLight, fontSize = 9.sp)
         }
     }
 }
@@ -602,9 +611,9 @@ fun VisualAssetCard(
     onExport: () -> Unit
 ) {
     Surface(
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
+        shape = RoundedCornerShape(12.dp),
+        color = CodexDarkSurface,
+        border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder),
         modifier = Modifier
             .fillMaxWidth()
             .testTag("visual_asset_card_${asset.id}")
@@ -616,20 +625,20 @@ fun VisualAssetCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = VioletAccent.copy(alpha = 0.2f)
+                    shape = RoundedCornerShape(6.dp),
+                    color = CodexBorder
                 ) {
                     Text(
                         text = asset.assetType,
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                        color = VioletAccent,
+                        color = CodexWhite,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                     )
                 }
                 Text(
                     text = asset.mcpSource,
                     style = MaterialTheme.typography.labelSmall,
-                    color = CyanPrimary
+                    color = CodexGrayLight
                 )
             }
 
@@ -638,7 +647,7 @@ fun VisualAssetCard(
             Text(
                 text = asset.title,
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onSurface
+                color = CodexWhite
             )
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -646,7 +655,7 @@ fun VisualAssetCard(
             Text(
                 text = asset.description,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = CodexGrayLight,
                 maxLines = 2
             )
 
@@ -659,21 +668,22 @@ fun VisualAssetCard(
                 OutlinedButton(
                     onClick = onPreview,
                     modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(10.dp)
+                    shape = RoundedCornerShape(8.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder)
                 ) {
-                    Icon(imageVector = Icons.Default.Visibility, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Icon(imageVector = Icons.Default.Visibility, contentDescription = null, tint = CodexWhite, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Previsualizar", style = MaterialTheme.typography.labelSmall)
+                    Text("Previsualizar", style = MaterialTheme.typography.labelSmall, color = CodexWhite)
                 }
                 Button(
                     onClick = onExport,
                     modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = CyanPrimary, contentColor = Color.Black)
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = CodexWhite, contentColor = CodexBlack)
                 ) {
-                    Icon(imageVector = Icons.Default.IosShare, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Icon(imageVector = Icons.Default.IosShare, contentDescription = null, tint = CodexBlack, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Exportar", style = MaterialTheme.typography.labelSmall)
+                    Text("Exportar", style = MaterialTheme.typography.labelSmall, color = CodexBlack, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -688,28 +698,28 @@ fun VisualAssetCanvasRenderer(asset: VisualAssetEntity) {
 
         // Draw node lines
         drawLine(
-            color = CyanPrimary,
+            color = CodexWhite,
             start = Offset(w * 0.2f, h * 0.5f),
             end = Offset(w * 0.5f, h * 0.3f),
-            strokeWidth = 3f
+            strokeWidth = 2f
         )
         drawLine(
-            color = CyanPrimary,
+            color = CodexWhite,
             start = Offset(w * 0.5f, h * 0.3f),
             end = Offset(w * 0.8f, h * 0.5f),
-            strokeWidth = 3f
+            strokeWidth = 2f
         )
         drawLine(
-            color = CyanPrimary,
+            color = CodexWhite,
             start = Offset(w * 0.5f, h * 0.3f),
             end = Offset(w * 0.5f, h * 0.8f),
-            strokeWidth = 3f
+            strokeWidth = 2f
         )
 
         // Draw nodes
-        drawCircle(color = CyanPrimary, radius = 18f, center = Offset(w * 0.2f, h * 0.5f))
-        drawCircle(color = VioletAccent, radius = 24f, center = Offset(w * 0.5f, h * 0.3f))
-        drawCircle(color = IndigoSecondary, radius = 18f, center = Offset(w * 0.8f, h * 0.5f))
-        drawCircle(color = EmeraldSuccess, radius = 18f, center = Offset(w * 0.5f, h * 0.8f))
+        drawCircle(color = CodexWhite, radius = 16f, center = Offset(w * 0.2f, h * 0.5f))
+        drawCircle(color = CodexWhite, radius = 22f, center = Offset(w * 0.5f, h * 0.3f))
+        drawCircle(color = CodexGrayLight, radius = 16f, center = Offset(w * 0.8f, h * 0.5f))
+        drawCircle(color = CodexGrayLight, radius = 16f, center = Offset(w * 0.5f, h * 0.8f))
     }
 }
