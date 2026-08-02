@@ -16,6 +16,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.io.File
 
 class MeetingViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -291,32 +292,62 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
 
             val currentMeeting = activeMeeting.value
             if (currentMeeting != null) {
-                repository.updateMeeting(currentMeeting.copy(durationSeconds = _recordingDuration.value, status = "PROCESANDO"))
-            }
-
-            _isAnalyzingAI.value = true
-            try {
-                if (recordedFile != null && recordedFile.exists() && recordedFile.length() > 0L) {
-                    repository.addAuditLog("Transcribiendo audio grabado con Gemini...")
-                    val participantsList = activeParticipants.value.map { it.name }
-                    repository.processRecordedAudioFile(
-                        meetingId = meetingId,
-                        audioFile = recordedFile,
-                        meetingTitle = currentMeeting?.title ?: "Reunión Grabada",
-                        participants = participantsList
+                // rawAudioPath persists the recording so a failed transcription/analysis can be
+                // retried later instead of losing the audio the moment this function returns —
+                // it was declared on the entity but never actually written before this.
+                repository.updateMeeting(
+                    currentMeeting.copy(
+                        durationSeconds = _recordingDuration.value,
+                        status = "PROCESANDO",
+                        rawAudioPath = recordedFile?.takeIf { it.exists() }?.absolutePath
                     )
-                } else {
-                    _errorMessage.value = "La grabación no produjo audio; no hay transcripción para analizar."
-                }
-
-                repository.addAuditLog("Enviando transcripción a Gemini para análisis multivariable...")
-                repository.analyzeMeetingWithAI(meetingId)
-                repository.addAuditLog("Análisis inteligente completado. Resumen, tareas y minutas generadas.")
-            } catch (e: Exception) {
-                _errorMessage.value = "No se pudo completar el análisis: ${e.message ?: "error desconocido"}"
-            } finally {
-                _isAnalyzingAI.value = false
+                )
             }
+
+            runAnalysis(meetingId, recordedFile, currentMeeting?.title ?: "Reunión Grabada", activeParticipants.value.map { it.name })
+        }
+    }
+
+    /** Re-runs transcription + AI analysis for a meeting stuck in "ERROR" (or "PROCESANDO"),
+     * reusing the audio file saved in rawAudioPath — only works if that file still exists;
+     * Android can reclaim files under cacheDir at any time. */
+    fun retryAnalysis(meetingId: Long) {
+        viewModelScope.launch {
+            val meeting = repository.getMeetingById(meetingId).firstOrNull()
+            val audioPath = meeting?.rawAudioPath
+            val audioFile = audioPath?.let { File(it) }
+            if (audioFile == null || !audioFile.exists()) {
+                _errorMessage.value = "El audio de esta reunión ya no está disponible; no se puede reintentar el análisis."
+                return@launch
+            }
+            val participantsList = repository.getParticipants(meetingId).firstOrNull()?.map { it.name } ?: emptyList()
+            runAnalysis(meetingId, audioFile, meeting.title, participantsList)
+        }
+    }
+
+    private suspend fun runAnalysis(meetingId: Long, audioFile: File?, meetingTitle: String, participantsList: List<String>) {
+        _isAnalyzingAI.value = true
+        try {
+            if (audioFile != null && audioFile.exists() && audioFile.length() > 0L) {
+                repository.addAuditLog("Transcribiendo audio grabado con Gemini...")
+                repository.processRecordedAudioFile(
+                    meetingId = meetingId,
+                    audioFile = audioFile,
+                    meetingTitle = meetingTitle,
+                    participants = participantsList
+                )
+            } else {
+                _errorMessage.value = "La grabación no produjo audio; no hay transcripción para analizar."
+            }
+
+            repository.addAuditLog("Enviando transcripción a Gemini para análisis multivariable...")
+            repository.analyzeMeetingWithAI(meetingId)
+            repository.addAuditLog("Análisis inteligente completado. Resumen, tareas y minutas generadas.")
+        } catch (e: Exception) {
+            _errorMessage.value = "No se pudo completar el análisis: ${e.message ?: "error desconocido"}"
+            repository.getMeetingById(meetingId).firstOrNull()?.let { repository.updateMeeting(it.copy(status = "ERROR")) }
+        } finally {
+            _isAnalyzingAI.value = false
         }
     }
 

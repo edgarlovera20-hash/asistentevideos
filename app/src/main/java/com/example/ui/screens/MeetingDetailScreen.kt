@@ -128,6 +128,32 @@ fun MeetingDetailScreen(
             )
         }
 
+        if (currentMeeting.status == "ERROR") {
+            Spacer(modifier = Modifier.height(12.dp))
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = RoseDanger.copy(alpha = 0.15f),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp).fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("El análisis falló", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold), color = RoseDanger)
+                        Text("El audio se conservó — puedes reintentar sin volver a grabar.", style = MaterialTheme.typography.labelSmall, color = CodexGrayLight)
+                    }
+                    TextButton(
+                        onClick = { viewModel.retryAnalysis(currentMeeting.id) },
+                        enabled = !isAnalyzing
+                    ) {
+                        Text(if (isAnalyzing) "Analizando..." else "Reintentar")
+                    }
+                }
+            }
+        }
+
         Spacer(modifier = Modifier.height(12.dp))
 
         // Open Meeting Chat Button (Fase 6 link) - White primary action
