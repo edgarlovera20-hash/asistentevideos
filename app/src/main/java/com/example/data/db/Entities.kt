@@ -2,6 +2,7 @@ package com.example.data.db
 
 import androidx.room.Embedded
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
 
@@ -24,7 +25,7 @@ data class MeetingEntity(
     val translatedLanguage: String? = "Español"
 )
 
-@Entity(tableName = "participants")
+@Entity(tableName = "participants", indices = [Index("meetingId")])
 data class ParticipantEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val meetingId: Long,
@@ -33,7 +34,7 @@ data class ParticipantEntity(
     val email: String = ""
 )
 
-@Entity(tableName = "transcript_segments")
+@Entity(tableName = "transcript_segments", indices = [Index("meetingId")])
 data class TranscriptSegmentEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val meetingId: Long,
@@ -43,7 +44,7 @@ data class TranscriptSegmentEntity(
     val timestampMs: Long
 )
 
-@Entity(tableName = "action_tasks")
+@Entity(tableName = "action_tasks", indices = [Index("meetingId")])
 data class ActionTaskEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val meetingId: Long,
@@ -54,7 +55,7 @@ data class ActionTaskEntity(
     val isCompleted: Boolean = false
 )
 
-@Entity(tableName = "agreements")
+@Entity(tableName = "agreements", indices = [Index("meetingId")])
 data class AgreementEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val meetingId: Long,
@@ -62,7 +63,7 @@ data class AgreementEntity(
     val category: String = "General"
 )
 
-@Entity(tableName = "chat_messages")
+@Entity(tableName = "chat_messages", indices = [Index("meetingId")])
 data class ChatMessageEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val meetingId: Long,
@@ -71,7 +72,7 @@ data class ChatMessageEntity(
     val timestampMs: Long = System.currentTimeMillis()
 )
 
-@Entity(tableName = "visual_assets")
+@Entity(tableName = "visual_assets", indices = [Index("meetingId")])
 data class VisualAssetEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val meetingId: Long? = null,
@@ -109,7 +110,7 @@ data class ReminderEntity(
     val createdAtMs: Long = System.currentTimeMillis()
 )
 
-@Entity(tableName = "meeting_summaries")
+@Entity(tableName = "meeting_summaries", indices = [Index("meetingId")])
 data class MeetingSummaryEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val meetingId: Long,
