@@ -406,7 +406,7 @@ fun RecordMeetingScreen(
                     .weight(1f),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(transcript) { segment ->
+                items(transcript, key = { it.id }) { segment ->
                     LiveTranscriptBubble(segment = segment)
                 }
             }

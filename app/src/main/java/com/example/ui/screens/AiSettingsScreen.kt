@@ -60,7 +60,7 @@ fun AiSettingsScreen(
                     color = CodexGrayLight
                 )
             }
-            items(AiProvider.entries) { provider ->
+            items(AiProvider.entries, key = { it.name }) { provider ->
                 ProviderCard(
                     provider = provider,
                     isActive = provider == activeProvider,

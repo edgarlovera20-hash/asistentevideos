@@ -141,7 +141,7 @@ fun EnterpriseMemoryScreen(
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        items(searchResults) { meeting ->
+                        items(searchResults, key = { it.id }) { meeting ->
                             MeetingCardItem(meeting = meeting, onClick = { onSelectMeeting(meeting.id) })
                         }
                     }
@@ -255,7 +255,7 @@ fun EnterpriseMemoryScreen(
                         )
                     }
 
-                    items(auditLogs) { log ->
+                    items(auditLogs, key = { it.id }) { log ->
                         Surface(
                             shape = RoundedCornerShape(8.dp),
                             color = CodexDarkSurface,

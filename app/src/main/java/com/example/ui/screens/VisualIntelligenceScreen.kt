@@ -227,7 +227,7 @@ fun VisualIntelligenceScreen(
                         }
                     }
 
-                    items(visualAssets) { asset ->
+                    items(visualAssets, key = { it.id }) { asset ->
                         VisualAssetCard(
                             asset = asset,
                             onPreview = { selectedAssetForPreview = asset },

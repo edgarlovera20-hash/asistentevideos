@@ -358,7 +358,7 @@ fun ExecutiveSummaryTab(
             )
         }
 
-        items(participants) { participant ->
+        items(participants, key = { it.id }) { participant ->
             Surface(
                 shape = RoundedCornerShape(10.dp),
                 color = CodexDarkSurface,
@@ -419,7 +419,7 @@ fun TasksAndAgreementsTab(
             )
         }
 
-        items(agreements) { agreement ->
+        items(agreements, key = { it.id }) { agreement ->
             Surface(
                 shape = RoundedCornerShape(10.dp),
                 color = CodexDarkSurface,
@@ -450,7 +450,7 @@ fun TasksAndAgreementsTab(
             )
         }
 
-        items(tasks) { task ->
+        items(tasks, key = { it.id }) { task ->
             Surface(
                 onClick = { onToggleTask(task) },
                 shape = RoundedCornerShape(10.dp),
@@ -686,7 +686,7 @@ fun MeetingVisualAssetsTab(
             }
         }
 
-        items(visualAssets) { asset ->
+        items(visualAssets, key = { it.id }) { asset ->
             VisualAssetCard(
                 asset = asset,
                 onPreview = {},
