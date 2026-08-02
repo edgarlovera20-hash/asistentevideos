@@ -254,7 +254,7 @@ fun RemindersScreen(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                items(reminders) { reminder ->
+                items(reminders, key = { it.id }) { reminder ->
                     ReminderCard(reminder = reminder, onDismiss = { viewModel.dismissReminderManually(reminder) })
                 }
             }

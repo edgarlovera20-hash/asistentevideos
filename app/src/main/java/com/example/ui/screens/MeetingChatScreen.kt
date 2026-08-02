@@ -131,7 +131,7 @@ fun MeetingChatScreen(
                 .weight(1f),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            items(chatMessages) { message ->
+            items(chatMessages, key = { it.id }) { message ->
                 ChatMessageBubble(message = message)
             }
         }

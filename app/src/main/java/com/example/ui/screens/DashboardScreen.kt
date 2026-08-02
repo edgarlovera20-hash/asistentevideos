@@ -416,7 +416,7 @@ fun DashboardScreen(
                 }
             }
 
-            items(meetings) { meeting ->
+            items(meetings, key = { it.id }) { meeting ->
                 MeetingCardItem(
                     meeting = meeting,
                     onClick = { onSelectMeeting(meeting.id) }
