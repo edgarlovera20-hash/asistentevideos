@@ -3,11 +3,9 @@ package com.example.data.api
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
-import java.util.concurrent.TimeUnit
 
 /**
  * NVIDIA NIM hosted text-to-image endpoint (FLUX.1-schnell). Cold-start generation can take
@@ -27,11 +25,7 @@ class NvidiaImageService(private val apiKey: String) {
         private val VALID_DIMENSIONS = setOf(768, 832, 896, 960, 1024, 1088, 1152, 1216, 1280, 1344)
     }
 
-    private val client = OkHttpClient.Builder()
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(150, TimeUnit.SECONDS)
-        .writeTimeout(30, TimeUnit.SECONDS)
-        .build()
+    private val client = SharedHttpClients.longRunning
 
     suspend fun generateImage(
         prompt: String,

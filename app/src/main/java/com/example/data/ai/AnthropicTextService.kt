@@ -1,16 +1,15 @@
 package com.example.data.ai
 
 import com.example.data.api.MeetingAnalysisResult
+import com.example.data.api.SharedHttpClients
 import com.example.data.api.retryIO
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
-import java.util.concurrent.TimeUnit
 
 /** Anthropic Messages API — the one provider here with its own request/response shape. */
 class AnthropicTextService(
@@ -18,10 +17,7 @@ class AnthropicTextService(
     private val model: String = "claude-sonnet-4-5"
 ) : AiTextService {
 
-    private val client = OkHttpClient.Builder()
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(60, TimeUnit.SECONDS)
-        .build()
+    private val client = SharedHttpClients.standard
 
     private suspend fun complete(prompt: String): String = withContext(Dispatchers.IO) {
         val body = JSONObject().apply {
