@@ -30,6 +30,12 @@ object AiServiceFactory {
             apiKey = settings.getApiKey(provider),
             model = settings.getModel(provider)
         )
+        AiProvider.NVIDIA_NIM -> OpenAiCompatibleTextService(
+            providerLabel = provider.label,
+            baseUrl = "https://integrate.api.nvidia.com/v1",
+            apiKey = settings.getApiKey(provider),
+            model = settings.getModel(provider)
+        )
         AiProvider.OLLAMA, AiProvider.LMSTUDIO -> OpenAiCompatibleTextService(
             providerLabel = provider.label,
             baseUrl = settings.getBaseUrl(provider).ifBlank {

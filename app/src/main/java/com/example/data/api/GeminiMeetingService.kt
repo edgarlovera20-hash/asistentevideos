@@ -5,12 +5,22 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
+import retrofit2.HttpException
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.http.Body
 import retrofit2.http.POST
 import retrofit2.http.Query
 import java.util.concurrent.TimeUnit
+
+/** Turns a network/HTTP exception into a short human-readable detail (HTTP code + Google's own error message, if any) instead of a generic "algo salió mal". */
+fun describeError(e: Exception): String = when (e) {
+    is HttpException -> {
+        val body = e.response()?.errorBody()?.string()?.take(300)
+        "HTTP ${e.code()}${if (!body.isNullOrBlank()) " — $body" else ""}"
+    }
+    else -> e.message ?: e.javaClass.simpleName
+}
 
 
 data class GeminiRequest(
@@ -163,7 +173,7 @@ class GeminiMeetingService(private val apiKeyOverride: String? = null) {
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            generateFallbackAnalysis(transcript, meetingTitle)
+            generateFallbackAnalysis(transcript, meetingTitle, describeError(e))
         }
     }
 
@@ -205,7 +215,7 @@ class GeminiMeetingService(private val apiKeyOverride: String? = null) {
                 ?: "No se obtuvo respuesta de la IA. Por favor intenta nuevamente."
         } catch (e: Exception) {
             e.printStackTrace()
-            generateMockChatResponse(userQuestion)
+            generateMockChatResponse(userQuestion, describeError(e))
         }
     }
 
@@ -238,7 +248,7 @@ class GeminiMeetingService(private val apiKeyOverride: String? = null) {
             response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text
                 ?: generateFallbackDocumentFormat(meetingTitle, formatType)
         } catch (e: Exception) {
-            generateFallbackDocumentFormat(meetingTitle, formatType)
+            generateFallbackDocumentFormat(meetingTitle, formatType, describeError(e))
         }
     }
 
@@ -339,7 +349,7 @@ class GeminiMeetingService(private val apiKeyOverride: String? = null) {
         )
     }
 
-    private fun generateFallbackAnalysis(transcript: String, title: String): MeetingAnalysisResult {
+    private fun generateFallbackAnalysis(transcript: String, title: String, errorDetail: String? = null): MeetingAnalysisResult {
         val tasks = mutableListOf(
             ParsedTask("Enviar propuesta o resumen a las partes involucradas", "Sin asignar", "En 3 días", "Alta"),
             ParsedTask("Revisar términos y documentación pendiente", "Sin asignar", "Próximo Lunes", "Alta"),
@@ -349,8 +359,9 @@ class GeminiMeetingService(private val apiKeyOverride: String? = null) {
             "Se aprueba el calendario de implementación propuesto.",
             "Se acuerda enviar un reporte de seguimiento a los involucrados."
         )
+        val detail = errorDetail?.let { " Detalle: $it" } ?: ""
         return MeetingAnalysisResult(
-            summary = "No se pudo generar un análisis con Gemini para \"$title\" (sin conexión o sin API key configurada). Este es un resumen de respaldo genérico — revisa la transcripción completa para el detalle real.",
+            summary = "No se pudo generar un análisis con Gemini para \"$title\" (sin conexión o sin API key configurada).$detail Este es un resumen de respaldo genérico — revisa la transcripción completa para el detalle real.",
             agreements = agreements,
             tasks = tasks,
             risks = listOf("Análisis de IA no disponible en este momento."),
@@ -361,11 +372,13 @@ class GeminiMeetingService(private val apiKeyOverride: String? = null) {
         )
     }
 
-    private fun generateMockChatResponse(question: String): String {
-        return "No se pudo conectar con Gemini para responder tu pregunta (sin conexión o sin API key configurada). Revisa tu conexión o la configuración de la API key e intenta de nuevo."
+    private fun generateMockChatResponse(question: String, errorDetail: String? = null): String {
+        val detail = errorDetail?.let { " Detalle: $it" } ?: ""
+        return "No se pudo conectar con Gemini para responder tu pregunta (sin conexión o sin API key configurada).$detail Revisa tu conexión o la configuración de la API key e intenta de nuevo."
     }
 
-    private fun generateFallbackDocumentFormat(title: String, format: String): String {
+    private fun generateFallbackDocumentFormat(title: String, format: String, errorDetail: String? = null): String {
+        val detail = errorDetail?.let { " Detalle: $it" } ?: ""
         return when (format) {
             "WORD" -> """
                 ====================================================
@@ -373,27 +386,27 @@ class GeminiMeetingService(private val apiKeyOverride: String? = null) {
                 ====================================================
                 Título: $title
                 Fecha: ${java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault()).format(java.util.Date())}
-                Estado: No se pudo generar con Gemini (sin conexión o sin API key)
+                Estado: No se pudo generar con Gemini (sin conexión o sin API key).$detail
 
                 Este documento es un respaldo genérico. Revisa la transcripción y
                 vuelve a intentar la generación cuando haya conexión disponible.
             """.trimIndent()
             "EXCEL" -> """
                 ID,Módulo,Tarea/Pendiente,Responsable,Fecha Límite,Prioridad,Estado
-                101,General,Documento de respaldo — sin conexión a Gemini,Sin asignar,Pendiente,Media,Pendiente
+                101,General,Documento de respaldo — sin conexión a Gemini.$detail,Sin asignar,Pendiente,Media,Pendiente
             """.trimIndent()
             "POWERPOINT" -> """
                 [SLIDE 1] TÍTULO: $title - Presentación Ejecutiva
                 [SLIDE 2] RESUMEN DE LA REUNIÓN: Puntos destacados de discusión y visión general.
                 [SLIDE 3] DECISIONES Y ACUERDOS: 3 acuerdos clave aprobados por la dirección.
                 [SLIDE 4] HOJA DE RUTA Y TAREAS: Plan de acción con responsables directos.
-                [SLIDE 5] CONCLUSIONES: Próximos pasos e indicadores de éxito.
+                [SLIDE 5] CONCLUSIONES: Próximos pasos e indicadores de éxito.$detail
             """.trimIndent()
             else -> """
                 ----------------------------------------------------
                 REPORTE EJECUTIVO — DOCUMENTO DE RESPALDO
                 ----------------------------------------------------
-                No se pudo generar con Gemini (sin conexión o sin API key configurada).
+                No se pudo generar con Gemini (sin conexión o sin API key configurada).$detail
                 Revisa la conexión o la configuración de la API key e intenta de nuevo.
             """.trimIndent()
         }

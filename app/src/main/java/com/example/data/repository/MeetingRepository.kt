@@ -239,6 +239,26 @@ class MeetingRepository(
         aiService.generateDocument(meeting.title, transcript, meeting.executiveSummary ?: "", formatType)
     }
 
+    suspend fun insertGeneratedImageAsset(
+        meetingId: Long?,
+        title: String,
+        description: String,
+        imageFilePath: String
+    ): Long = withContext(Dispatchers.IO) {
+        dao.insertVisualAsset(
+            VisualAssetEntity(
+                meetingId = meetingId,
+                title = title,
+                assetType = "AI_IMAGE",
+                category = "Reuniones",
+                description = description,
+                mcpSource = "NVIDIA NIM",
+                modelUsed = "FLUX.1-schnell",
+                imageFilePath = imageFilePath
+            )
+        )
+    }
+
     suspend fun createVisualAsset(
         meetingId: Long?,
         title: String,

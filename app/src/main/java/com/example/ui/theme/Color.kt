@@ -44,5 +44,3 @@ val TextPrimaryDark = CodexWhite
 val TextSecondaryDark = CodexGrayLight
 val TextPrimaryLight = CodexWhite
 val TextSecondaryLight = CodexGrayLight
-
-

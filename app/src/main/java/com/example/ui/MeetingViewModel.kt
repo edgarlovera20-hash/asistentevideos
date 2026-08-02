@@ -5,6 +5,8 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.ai.AiServiceFactory
 import com.example.data.api.GoogleDriveService
+import com.example.data.api.ImageProviderSettings
+import com.example.data.api.NvidiaImageService
 import com.example.data.audio.AudioRecordingForegroundService
 import com.example.data.audio.RealtimeAudioRecorder
 import com.example.data.auth.GoogleAuthManager
@@ -22,6 +24,7 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
     val audioRecorder = RealtimeAudioRecorder(application)
     val authManager = GoogleAuthManager(application)
     private val driveService = GoogleDriveService()
+    private val imageSettings = ImageProviderSettings(application)
 
     val meetings: StateFlow<List<MeetingEntity>> = repository.allMeetings
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -118,6 +121,9 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+
+    private val _isGeneratingImage = MutableStateFlow(false)
+    val isGeneratingImage: StateFlow<Boolean> = _isGeneratingImage.asStateFlow()
 
     private var recordingTimerJob: Job? = null
 
@@ -411,6 +417,42 @@ class MeetingViewModel(application: Application) : AndroidViewModel(application)
                 repository.addAuditLog("Reunión \"$title\" guardada en Google Drive.")
             } catch (e: Exception) {
                 _errorMessage.value = "No se pudo guardar en Drive: ${e.message ?: "error desconocido"}"
+            }
+            delay(2000)
+            _actionFeedback.value = null
+        }
+    }
+
+    /**
+     * Generates a real image via NVIDIA NIM (FLUX.1-schnell) and saves it as a VisualAssetEntity.
+     * Cold-start generation can take well over a minute — [isGeneratingImage] drives a persistent
+     * loading state in the UI instead of the short-lived [actionFeedback] toast used elsewhere.
+     */
+    fun generateRealVisualImage(prompt: String) {
+        val apiKey = imageSettings.getApiKey()
+        if (apiKey.isBlank()) {
+            _errorMessage.value = "Configura tu API key de NVIDIA en Ajustes IA primero."
+            return
+        }
+        viewModelScope.launch {
+            _isGeneratingImage.value = true
+            try {
+                val bytes = NvidiaImageService(apiKey).generateImage(prompt)
+                val dir = java.io.File(getApplication<Application>().filesDir, "visual_assets").apply { mkdirs() }
+                val file = java.io.File(dir, "img_${System.currentTimeMillis()}.png")
+                file.writeBytes(bytes)
+                repository.insertGeneratedImageAsset(
+                    meetingId = _currentMeetingId.value,
+                    title = "Imagen generada",
+                    description = prompt,
+                    imageFilePath = file.absolutePath
+                )
+                repository.addAuditLog("Imagen real generada con NVIDIA NIM: \"$prompt\"")
+                _actionFeedback.value = "Imagen generada."
+            } catch (e: Exception) {
+                _errorMessage.value = "No se pudo generar la imagen: ${e.message ?: "error desconocido"}"
+            } finally {
+                _isGeneratingImage.value = false
             }
             delay(2000)
             _actionFeedback.value = null

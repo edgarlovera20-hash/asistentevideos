@@ -35,8 +35,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- Deep Link Handler for External Meeting Links -->
-            <intent-filter android:autoVerify="true">
+            <!-- Deep Link Handler for External Meeting Links. No autoVerify: we don't own
+                 these domains, so Digital Asset Links verification would never pass — this
+                 just makes the app appear as a chooser option, not the default handler. -->
+            <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />

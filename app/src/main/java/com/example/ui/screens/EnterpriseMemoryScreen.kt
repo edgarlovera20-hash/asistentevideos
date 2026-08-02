@@ -148,68 +148,66 @@ fun EnterpriseMemoryScreen(
                 }
             }
             1 -> {
-                // Integrations Suite
+                // Integrations Suite — only Calendar/Drive are real (see Avisos tab + botones de
+                // Compartir/Drive en el detalle de reunión); the rest are not implemented and are
+                // shown disabled rather than as live toggles that would silently do nothing.
+                val isGoogleConnected = viewModel.authManager.isConnected
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     item {
                         Text(
-                            text = "Integraciones Empresariales Conectadas",
+                            text = "Integraciones",
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = CodexWhite
                         )
                     }
 
+                    item {
+                        IntegrationRow(
+                            title = "Google Calendar",
+                            desc = "Recordatorios de reuniones próximas. Se conecta desde la pestaña Avisos.",
+                            isConnected = isGoogleConnected,
+                            statusLabel = if (isGoogleConnected) "Conectado" else "Sin conectar"
+                        )
+                    }
+                    item {
+                        IntegrationRow(
+                            title = "Google Drive",
+                            desc = "Guardar minutas como archivo de texto. Botón \"Guardar en Drive\" en el detalle de la reunión.",
+                            isConnected = isGoogleConnected,
+                            statusLabel = if (isGoogleConnected) "Conectado" else "Sin conectar"
+                        )
+                    }
+                    item {
+                        IntegrationRow(
+                            title = "WhatsApp",
+                            desc = "Detecta menciones de reuniones en tus chats. Se activa desde la pestaña Avisos.",
+                            isConnected = false,
+                            statusLabel = "Ver en Avisos"
+                        )
+                    }
+
+                    item {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Próximamente",
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                            color = CodexGrayLight
+                        )
+                    }
+
                     items(
                         listOf(
-                            Pair("Google Calendar", "Sincronización de minutas y fechas límite de tareas"),
-                            Pair("Gmail", "Envío automático de reportes ejecutivos"),
-                            Pair("Google Drive", "Almacenamiento de transcripciones y audio"),
-                            Pair("Zoom Meetings", "Transcripción automática en vivo"),
-                            Pair("Google Meet", "Bot asistente inteligente incorporado"),
-                            Pair("Microsoft Teams", "Alertas de acuerdos e IA conversacional"),
-                            Pair("Slack", "Notificaciones de tareas asignadas"),
-                            Pair("Discord", "Canales de voz y transcripción de proyectos"),
-                            Pair("WhatsApp Business", "Envío inmediato de minutas en PDF")
+                            "Gmail" to "Envío de reportes ejecutivos por correo",
+                            "Zoom" to "Unirse y grabar vía enlace de Zoom (compartir manual, sin transcripción en vivo)",
+                            "Microsoft Teams" to "Alertas de acuerdos e IA conversacional",
+                            "Slack" to "Notificaciones de tareas asignadas",
+                            "Discord" to "Canales de voz y transcripción de proyectos"
                         )
                     ) { (title, desc) ->
-                        var isEnabled by remember { mutableStateOf(true) }
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = CodexDarkSurface,
-                            border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(14.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = title,
-                                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                                        color = CodexWhite
-                                    )
-                                    Text(
-                                        text = desc,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = CodexGrayLight
-                                    )
-                                }
-                                Switch(
-                                    checked = isEnabled,
-                                    onCheckedChange = { isEnabled = it },
-                                    colors = SwitchDefaults.colors(
-                                        checkedThumbColor = CodexBlack,
-                                        checkedTrackColor = CodexWhite,
-                                        uncheckedThumbColor = CodexGrayLight,
-                                        uncheckedTrackColor = CodexBorder
-                                    )
-                                )
-                            }
-                        }
+                        IntegrationRow(title = title, desc = desc, isConnected = false, statusLabel = "No implementado")
                     }
                 }
             }
@@ -276,6 +274,38 @@ fun EnterpriseMemoryScreen(
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun IntegrationRow(title: String, desc: String, isConnected: Boolean, statusLabel: String) {
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = CodexDarkSurface,
+        border = androidx.compose.foundation.BorderStroke(1.dp, CodexBorder),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = title, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold), color = CodexWhite)
+                Text(text = desc, style = MaterialTheme.typography.labelSmall, color = CodexGrayLight)
+            }
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = if (isConnected) CodexWhite else CodexBorder
+            ) {
+                Text(
+                    text = statusLabel,
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                    color = if (isConnected) CodexBlack else CodexGrayLight,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                )
             }
         }
     }

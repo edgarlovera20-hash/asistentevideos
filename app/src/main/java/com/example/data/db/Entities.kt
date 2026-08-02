@@ -84,7 +84,10 @@ data class VisualAssetEntity(
     val mcpSource: String = "Native SVG Engine", // Figma MCP, Canva MCP, Excalidraw MCP, Miro MCP, etc.
     val modelUsed: String = "Gemini Vision", // Gemini Flash, Gemini Pro, Mermaid, PlantUML, Excalidraw, Imagen
     val version: Int = 1,
-    val timestampMs: Long = System.currentTimeMillis()
+    val timestampMs: Long = System.currentTimeMillis(),
+    // Path to a real generated image file (internal storage), set only for assets created by
+    // NvidiaImageService. Null for the local-template assets, which render via VisualAssetCanvasRenderer instead.
+    val imageFilePath: String? = null
 )
 
 @Entity(tableName = "audit_logs")

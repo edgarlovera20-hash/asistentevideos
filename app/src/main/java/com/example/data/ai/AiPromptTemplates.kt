@@ -143,8 +143,8 @@ fun parseMeetingAnalysisText(rawText: String): MeetingAnalysisResult {
     )
 }
 
-fun fallbackAnalysis(providerLabel: String, title: String): MeetingAnalysisResult = MeetingAnalysisResult(
-    summary = "No se pudo generar un análisis con $providerLabel para \"$title\" (sin conexión o configuración inválida). Este es un resumen de respaldo genérico — revisa la transcripción completa para el detalle real.",
+fun fallbackAnalysis(providerLabel: String, title: String, errorDetail: String? = null): MeetingAnalysisResult = MeetingAnalysisResult(
+    summary = "No se pudo generar un análisis con $providerLabel para \"$title\" (sin conexión o configuración inválida).${errorDetail?.let { " Detalle: $it" } ?: ""} Este es un resumen de respaldo genérico — revisa la transcripción completa para el detalle real.",
     agreements = listOf("Se acuerda enviar un reporte de seguimiento a los involucrados."),
     tasks = listOf(ParsedTask("Revisar términos y documentación pendiente", "Sin asignar", "Próximo Lunes", "Alta")),
     risks = listOf("Análisis de IA no disponible en este momento."),
@@ -154,13 +154,15 @@ fun fallbackAnalysis(providerLabel: String, title: String): MeetingAnalysisResul
     conclusion = "Reintenta el análisis cuando haya conexión y la configuración de $providerLabel sea válida."
 )
 
-fun fallbackChatResponse(providerLabel: String): String =
-    "No se pudo conectar con $providerLabel para responder tu pregunta (sin conexión o configuración inválida). Revisa tu conexión o la configuración del proveedor de IA e intenta de nuevo."
+fun fallbackChatResponse(providerLabel: String, errorDetail: String? = null): String {
+    val detail = errorDetail?.let { " Detalle: $it" } ?: ""
+    return "No se pudo conectar con $providerLabel para responder tu pregunta (sin conexión o configuración inválida).$detail Revisa tu conexión o la configuración del proveedor de IA e intenta de nuevo."
+}
 
-fun fallbackDocument(providerLabel: String, title: String): String = """
+fun fallbackDocument(providerLabel: String, title: String, errorDetail: String? = null): String = """
     ----------------------------------------------------
     DOCUMENTO DE RESPALDO — $title
     ----------------------------------------------------
-    No se pudo generar con $providerLabel (sin conexión o configuración inválida).
+    No se pudo generar con $providerLabel (sin conexión o configuración inválida).${errorDetail?.let { " Detalle: $it" } ?: ""}
     Revisa la conexión o la configuración del proveedor de IA e intenta de nuevo.
 """.trimIndent()
