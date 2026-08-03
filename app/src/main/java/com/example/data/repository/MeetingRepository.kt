@@ -85,6 +85,13 @@ class MeetingRepository(
     }
 
     suspend fun deleteMeeting(meetingId: Long) = withContext(Dispatchers.IO) {
+        // The cascade only removes DB rows — the raw audio recording and any real generated
+        // images (NvidiaImageService) live on disk as separate files and would otherwise be
+        // orphaned forever.
+        dao.getMeetingByIdSync(meetingId)?.rawAudioPath?.let { File(it).delete() }
+        dao.getVisualAssetsForMeeting(meetingId).firstOrNull()?.forEach { asset ->
+            asset.imageFilePath?.let { File(it).delete() }
+        }
         dao.deleteMeetingCascade(meetingId)
     }
 
